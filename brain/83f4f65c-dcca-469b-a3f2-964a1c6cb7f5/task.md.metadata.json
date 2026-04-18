@@ -1,0 +1,6 @@
+{
+  "artifactType": "ARTIFACT_TYPE_TASK",
+  "summary": "Task Checklist covering:\n1. Addition of marquee to pubspec (Done)\n2. Ticker integration for Indices (Done)\n3. Removal of chart functionality (Done)\n4. Privacy Policy addition (Done)\n5. Article text coloring update (Done)",
+  "updatedAt": "2026-04-11T08:34:03.087356100Z",
+  "version": "15"
+}

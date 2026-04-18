@@ -1,0 +1,8 @@
+# Crypto Shift App Update Tasks
+
+- [ ] Add `marquee` package to `pubspec.yaml`
+- [ ] Modify `market_data_api.dart` to fetch traditional indices (Nikkei, Nasdaq) via HTTP polling
+- [ ] Integrate indices and `marquee` into the ticker UI (`home_screen.dart`), replacing current simple list
+- [ ] Remove chart modal functionality from ticker taps (`home_screen.dart`)
+- [ ] Add Privacy Policy link to `my_page_screen.dart`
+- [ ] Update article summary text color in `article_detail_screen.dart`

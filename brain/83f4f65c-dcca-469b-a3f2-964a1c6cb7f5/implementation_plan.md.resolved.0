@@ -1,0 +1,88 @@
+# WordPress ニュースアプリ → Google Play リリース 実装計画
+
+WordPressで運営しているニュースサイトを、WordPress REST APIを通じてコンテンツを表示するAndroidアプリとして開発し、Google Playにリリースします。
+
+## User Review Required
+
+> [!IMPORTANT]
+> 以下の情報をご確認・ご提供ください（作業開始前に必要です）：
+> 1. **WordPressサイトのURL**（例: `https://your-news-site.com`）
+> 2. **アプリのコンセプト**：読者向け（記事閲覧のみ）か、管理者向け（投稿機能も含む）か
+> 3. **アプリ名・パッケージ名**（例: `com.yourcompany.newsapp`）
+> 4. **Google Playデベロッパーアカウント**：既にお持ちですか？（登録料$25/年が必要）
+
+> [!WARNING]
+> Google Play への公開には、Googleアカウントへの $25（約3,800円）の一回払いのデベロッパー登録料が必要です。
+
+## 技術スタック
+
+| 項目 | 選択 | 理由 |
+|------|------|------|
+| フレームワーク | **Flutter** | iOS/Android両対応、高パフォーマンス、豊富なUIコンポーネント |
+| データソース | **WordPress REST API** | WordPressに標準搭載、認証不要で記事取得可能 |
+| 状態管理 | **Provider / Riverpod** | シンプルで扱いやすい |
+| HTTP通信 | **dio / http パッケージ** | REST API連携 |
+
+## Proposed Changes
+
+---
+
+### Flutter アプリ本体
+
+#### [NEW] `lib/main.dart`
+Flutterアプリのエントリポイント。テーマ設定・ルーティングを定義。
+
+#### [NEW] `lib/screens/home_screen.dart`
+ニュース一覧画面。WordPress REST API から最新記事を取得・表示。
+
+#### [NEW] `lib/screens/article_detail_screen.dart`
+記事詳細画面。WebViewまたはHTMLレンダリングで本文を表示。
+
+#### [NEW] `lib/services/wordpress_api.dart`
+WordPress REST API (`/wp-json/wp/v2/posts`) へのHTTPリクエストを管理するサービスクラス。
+
+#### [NEW] `lib/models/article.dart`
+記事データのモデルクラス（タイトル、サムネイル、本文、投稿日など）。
+
+#### [NEW] `android/app/src/main/res/`
+アプリアイコン各解像度（mipmap-hdpi / mdpi / xhdpi / xxhdpi / xxxhdpi）。
+
+---
+
+### Google Play リリース設定
+
+#### [NEW] `android/app/build.gradle`
+署名設定・バージョン設定の更新（リリースビルド用）。
+
+#### [NEW] `android/key.properties`
+Keystoreの署名情報（このファイルはGitに含めない）。
+
+---
+
+## 開発ロードマップ
+
+```
+Step 1: Flutter環境セットアップ  (flutter create)
+Step 2: WordPress REST API連携確認
+Step 3: ニュース一覧/詳細画面の実装
+Step 4: UI・デザインの仕上げ
+Step 5: アプリアイコン・スプラッシュ画面
+Step 6: リリースビルド (AAB生成)
+Step 7: Google Play Console への登録・提出
+```
+
+## Verification Plan
+
+### 自動テスト
+```bash
+# Flutterのビルド確認
+flutter build apk --debug
+
+# リリースビルド
+flutter build appbundle --release
+```
+
+### 手動確認
+1. **APIテスト**：ブラウザで `https://[あなたのサイト]/wp-json/wp/v2/posts` にアクセスし、JSON形式で記事データが返ることを確認
+2. **エミュレータテスト**：Android StudioのエミュレータまたはAndroid実機でアプリを起動し、記事一覧と詳細が正常に表示されることを確認
+3. **Google Play 内部テスト**：リリース前にPlay Consoleの「内部テスト」トラックで動作確認

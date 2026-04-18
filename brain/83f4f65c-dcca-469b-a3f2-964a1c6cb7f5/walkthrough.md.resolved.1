@@ -1,0 +1,44 @@
+# アプリ構築完了・リリース手順
+
+WordPressのニュースサイト（Crypto Shift）を元にしたFlutter Androidアプリの開発とリリースビルドが完了しました。
+
+## 開発完了内容 (v1.0 仕様対応済み)
+- **WordPress連携**: `https://crypto-shift.com/wp-json/wp/v2/posts` から記事とカテゴリを自動取得する機能を実装しました
+- **UI実装**: ダークテーマを基調とした一覧画面、HTMLレンダリングによる詳細画面を構築しました
+- **ボトムナビゲーション**: 「ホーム」と「マイページ」タブによるタブバー方式のルート画面を実装しました
+- **ホーム画面**: 「すべて」「暗号資産」「天然資源」「不動産」カテゴリ用タブと、BTC/ETH/SOLのリアルタイム更新をする「市場データティッカー」を実装しました
+- **状態管理・マイページ**: `SharedPreferences`と`Provider`による記事の「保存済み」「いいね」「閲覧履歴（既読）」のローカルキャッシングとリスト表示を実装しました
+- **記事詳細画面**: 「AI 3行要約（モック）」、OS標準連携の「シェア」ボタン、お気に入り「いいね/保存」ができる下部固定のインタラクションバーを追加しました
+- **アプリアイコン**: 「Crypto Shift」に合わせたモダンなアプリアイコンとスプラッシュ画面を生成し適用しました
+- **署名設定**: リリース用にキーストア（`upload-keystore.jks`）を作成し、ビルド設定を行いました
+
+## アプリの動作確認（テスト）
+まずはご自身のAndroid端末で動作を確認してください。
+
+1. **テスト用APK**: [build\app\outputs\flutter-apk\app-debug.apk](file:///c:/Users/kalus/.gemini/antigravity/build/app/outputs/flutter-apk/app-debug.apk)
+2. 上記のファイル（または `.\build\app\outputs\apk\release\app-release.apk`）をAndroid端末に転送し、インストールして動作を確認してください
+3. または、Android端末をPCにUSB接続し、以下のコマンドで直接インストールして起動できます
+   ```bash
+   flutter run --release
+   ```
+
+## Google Play Console へのリリース手順
+本番用のアプリパッケージ（AABファイル）が生成されています。以下の手順でリリースを行ってください。
+
+1. **リリース用ファイル**: [build\app\outputs\bundle\release\app-release.aab](file:///c:/Users/kalus/.gemini/antigravity/build/app/outputs/bundle/release/app-release.aab)
+   このファイルがGoogle Playにアップロードする本体です。
+2. **Play Console へのログイン**: Google Play Console にログインし、「アプリの作成」をクリックします
+3. **アプリ情報の設定**:
+   - アプリ名: **Crypto Shift**
+   - デフォルトの言語: 日本語
+   - アプリかゲームか: アプリ
+   - 無料か有料か: 無料
+4. **ストアの掲載情報**: アプリの簡単な説明、詳細な説明、ストアアイコン（512x512）、スクリーンショット（スマートフォン用2〜8枚）をアップロードします。（※スクリーンショットは動作確認時に端末で撮影してください）
+5. **AABのアップロード**:
+   左側メニュー「製品版」＞「新しいリリースを作成」に進み、生成された `app-release.aab` をアップロードします
+6. **署名鍵の管理**:
+    初回アップロード時に「Google Play アプリ署名」機能を利用することに同意します（推奨）
+7. **審査への提出**: 全ての必須項目（コンテンツのレーティング、ターゲット層、プライバシーポリシーなど）を入力し終えたら、リリースを保存して審査へ提出します。
+
+> [!IMPORTANT]  
+> 今回作成した署名ファイル [android/upload-keystore.jks](file:///c:/Users/kalus/.gemini/antigravity/android/upload-keystore.jks) と パスワード情報 [android/key.properties](file:///c:/Users/kalus/.gemini/antigravity/android/key.properties) は、今後のアプリのアップデート時に必ず必要になります。PCのバックアップ等で安全に保管してください。
