@@ -2,7 +2,7 @@ name: crypto_shift_app
 description: "Crypto Shift - 暗号資産ニュースアプリ"
 publish_to: 'none'
 
-version: 1.0.12+13
+version: 1.0.13+14
 
 environment:
   sdk: ^3.7.0
@@ -45,6 +45,8 @@ flutter_launcher_icons:
   android: true
   ios: false
   image_path: "assets/app_logo.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/app_logo.png"
 
 flutter_native_splash:
   color: "#FFFFFF"
