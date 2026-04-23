@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../providers/app_state.dart';
 import '../models/article.dart';
 import 'article_detail_screen.dart';
+import 'about_screen.dart';
 
 class MyPageScreen extends StatelessWidget {
   const MyPageScreen({super.key});
@@ -48,7 +49,12 @@ class MyPageScreen extends StatelessWidget {
               icon: const Icon(Icons.more_vert),
               tooltip: 'その他',
               onSelected: (value) async {
-                if (value == 'privacy') {
+                if (value == 'about') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AboutScreen()),
+                  );
+                } else if (value == 'privacy') {
                   final url = Uri.parse('https://crypto-shift.com/privacy-policy/');
                   if (await canLaunchUrl(url)) {
                     await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -61,6 +67,10 @@ class MyPageScreen extends StatelessWidget {
                 }
               },
               itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'about',
+                  child: Text('Crypto Shift について'),
+                ),
                 const PopupMenuItem(
                   value: 'privacy',
                   child: Text('プライバシーポリシー'),

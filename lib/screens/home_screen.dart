@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -181,34 +182,43 @@ class _HomeScreenState extends State<HomeScreen> {
                   final data = snapshot.data ?? {};
                   if (data.isEmpty) return const SizedBox.shrink();
 
-                  final buffer = StringBuffer();
                   final items = ['BTC', 'ETH', 'SOL', '日経平均', 'NYダウ', 'NASDAQ', 'S&P500', 'JPX日経400', '日経300'];
+                  final List<Widget> tickerWidgets = [];
                   
                   for (final sym in items) {
                     if (data.containsKey(sym)) {
                       final t = data[sym]!;
                       final price = NumberFormat('#,###.##').format(t.currentPrice);
-                      final pctStr = t.priceChangePercent > 0 ? '+${t.priceChangePercent.toStringAsFixed(2)}%' : '${t.priceChangePercent.toStringAsFixed(2)}%';
-                      buffer.write(' [$sym] ¥$price ($pctStr)  ');
+                      
+                      if (t.priceChangePercent == 0.0) {
+                        tickerWidgets.add(Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text('[$sym] ¥$price', style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13, fontWeight: FontWeight.bold)),
+                        ));
+                      } else {
+                        final isPositive = t.priceChangePercent > 0;
+                        final pctStr = isPositive ? '+${t.priceChangePercent.toStringAsFixed(2)}%' : '${t.priceChangePercent.toStringAsFixed(2)}%';
+                        final color = isPositive ? const Color(0xFF00C853) : const Color(0xFFFF3D00); // using more visible green/red
+                        
+                        tickerWidgets.add(Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: RichText(
+                            text: TextSpan(
+                              style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13, fontWeight: FontWeight.bold),
+                              children: [
+                                TextSpan(text: '[$sym] ¥$price '),
+                                TextSpan(text: '($pctStr)', style: TextStyle(color: color)),
+                              ],
+                            ),
+                          ),
+                        ));
+                      }
                     }
                   }
                   
-                  final text = buffer.toString();
-                  if (text.isEmpty) return const SizedBox.shrink();
+                  if (tickerWidgets.isEmpty) return const SizedBox.shrink();
 
-                  return Marquee(
-                    text: text,
-                    style: TextStyle(
-                       color: isDark ? Colors.white70 : Colors.black87,
-                       fontSize: 13,
-                       fontWeight: FontWeight.bold,
-                    ),
-                    scrollAxis: Axis.horizontal,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    blankSpace: 60.0,
-                    velocity: 40.0,
-                    startPadding: 10.0,
-                  );
+                  return _AutoScrollTicker(children: tickerWidgets);
                 },
               ),
             ),
@@ -220,6 +230,53 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AutoScrollTicker extends StatefulWidget {
+  final List<Widget> children;
+  const _AutoScrollTicker({required this.children});
+  @override
+  State<_AutoScrollTicker> createState() => _AutoScrollTickerState();
+}
+
+class _AutoScrollTickerState extends State<_AutoScrollTicker> {
+  final ScrollController _scrollController = ScrollController();
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startScrolling();
+    });
+  }
+  
+  void _startScrolling() {
+    _timer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.offset + 1.2);
+      }
+    });
+  }
+
+  @override
+  void dispose() { 
+    _timer?.cancel(); 
+    _scrollController.dispose(); 
+    super.dispose(); 
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      controller: _scrollController,
+      scrollDirection: Axis.horizontal,
+      physics: const NeverScrollableScrollPhysics(),
+      itemBuilder: (context, index) {
+        return Center(child: widget.children[index % widget.children.length]);
+      },
     );
   }
 }
@@ -530,7 +587,7 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
                             icon: Icon(
                               isSaved ? Icons.bookmark : Icons.bookmark_border,
                               size: 20,
-                              color: isSaved ? const Color(0xFF00D2FF) : Colors.white54,
+                              color: isSaved ? const Color(0xFF00D2FF) : (isDark ? Colors.white54 : Colors.black54),
                             ),
                             onPressed: () => context.read<AppState>().toggleSave(article),
                             padding: EdgeInsets.zero,
