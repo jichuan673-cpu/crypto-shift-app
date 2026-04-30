@@ -1,5 +1,7 @@
-# Notification Settings Implementation
+# Phase 1: AI Chatbot UI Integration
 
-- [x] 1. Update `AppState` with notification preferences and FCM topic logic.
-- [x] 2. Create `NotificationSettingsScreen` UI.
-- [x] 3. Link `NotificationSettingsScreen` to `MyPageScreen`.
+- [x] 1. Update `AppState` for premium status and daily limits.
+- [x] 2. Add chat UI dependencies (`flutter_chat_ui`).
+- [x] 3. Create `PremiumPaywallScreen` UI.
+- [x] 4. Create `AiChatScreen` UI with chat history and mock responses.
+- [x] 5. Add AI Chat tab to `RootScreen`.

@@ -1,6 +1,6 @@
 {
   "artifactType":  "ARTIFACT_TYPE_TASK",
-  "summary":  "Task tracker for implementing Notification Settings",
-  "updatedAt":  "2026-04-30T03:04:35.335375900Z",
-  "version":  "16"
+  "summary":  "Phase 1 tasks for the AI Chatbot implementation, including AppState updates, Chat UI creation, Paywall screen creation, and root navigation updates.",
+  "updatedAt":  "2026-04-30T08:43:51.352936900Z",
+  "version":  "19"
 }

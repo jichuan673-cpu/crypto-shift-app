@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'my_page_screen.dart';
+import 'ai_chat_screen.dart';
 
 class RootScreen extends StatefulWidget {
   const RootScreen({super.key});
@@ -14,6 +15,7 @@ class _RootScreenState extends State<RootScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
+    const AiChatScreen(),
     const MyPageScreen(),
   ];
 
@@ -48,6 +50,11 @@ class _RootScreenState extends State<RootScreen> {
               icon: Icon(Icons.auto_awesome_mosaic_outlined),
               activeIcon: Icon(Icons.auto_awesome_mosaic),
               label: 'ホーム',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.smart_toy_outlined),
+              activeIcon: Icon(Icons.smart_toy),
+              label: 'AI相談',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline),

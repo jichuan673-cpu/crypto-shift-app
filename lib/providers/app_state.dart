@@ -16,6 +16,12 @@ class AppState extends ChangeNotifier {
   String _notificationFrequency = 'realtime'; // 'realtime' or 'daily'
   List<int> _subscribedCategoryIds = [];
   
+  // AI Chat & Premium State
+  bool _isPremium = false;
+  int _aiDailyQueryCount = 0;
+  String _aiLastQueryDate = '';
+
+  
   // 保存・いいねした記事の詳細データキャッシュ
   Map<String, dynamic> _cachedArticlesData = {};
 
@@ -28,6 +34,11 @@ class AppState extends ChangeNotifier {
   bool get notificationsEnabled => _notificationsEnabled;
   String get notificationFrequency => _notificationFrequency;
   List<int> get subscribedCategoryIds => _subscribedCategoryIds;
+  
+  bool get isPremium => _isPremium;
+  int get aiDailyQueryCount => _aiDailyQueryCount;
+  int get aiMaxDailyQueries => 3;
+  bool get canUseAiChat => _isPremium || _aiDailyQueryCount < aiMaxDailyQueries;
 
   AppState() {
     _loadState();
@@ -46,6 +57,17 @@ class AppState extends ChangeNotifier {
     _notificationsEnabled = prefs.getBool('notificationsEnabled') ?? true;
     _notificationFrequency = prefs.getString('notificationFrequency') ?? 'realtime';
     _subscribedCategoryIds = (prefs.getStringList('subscribedCategoryIds') ?? []).map(int.parse).toList();
+    
+    _isPremium = prefs.getBool('isPremium') ?? false;
+    _aiDailyQueryCount = prefs.getInt('aiDailyQueryCount') ?? 0;
+    _aiLastQueryDate = prefs.getString('aiLastQueryDate') ?? '';
+    
+    // Reset daily query count if the day has changed
+    final today = DateTime.now().toIso8601String().split('T')[0];
+    if (_aiLastQueryDate != today) {
+      _aiDailyQueryCount = 0;
+      _aiLastQueryDate = today;
+    }
     
     // アプリ起動時にFCMトピックを同期
     _syncFcmTopics();
@@ -71,6 +93,10 @@ class AppState extends ChangeNotifier {
     await prefs.setString('notificationFrequency', _notificationFrequency);
     await prefs.setStringList('subscribedCategoryIds', _subscribedCategoryIds.map((id) => id.toString()).toList());
 
+    await prefs.setBool('isPremium', _isPremium);
+    await prefs.setInt('aiDailyQueryCount', _aiDailyQueryCount);
+    await prefs.setString('aiLastQueryDate', _aiLastQueryDate);
+
     await prefs.setString('cachedArticlesData', jsonEncode(_cachedArticlesData));
     await prefs.setDouble('fontSizeMultiplier', _fontSizeMultiplier);
   }
@@ -93,6 +119,29 @@ class AppState extends ChangeNotifier {
     _categoryOrder = newOrder;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('categoryOrder', _categoryOrder);
+    notifyListeners();
+  }
+
+  // --- AI Chat Logic ---
+  
+  Future<void> incrementAiQueryCount() async {
+    final today = DateTime.now().toIso8601String().split('T')[0];
+    if (_aiLastQueryDate != today) {
+      _aiDailyQueryCount = 1;
+      _aiLastQueryDate = today;
+    } else {
+      _aiDailyQueryCount++;
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('aiDailyQueryCount', _aiDailyQueryCount);
+    await prefs.setString('aiLastQueryDate', _aiLastQueryDate);
+    notifyListeners();
+  }
+
+  Future<void> setPremiumStatus(bool isPremium) async {
+    _isPremium = isPremium;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isPremium', isPremium);
     notifyListeners();
   }
 

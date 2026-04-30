@@ -1,0 +1,7 @@
+# Phase 1: AI Chatbot UI Integration
+
+- [x] 1. Update `AppState` for premium status and daily limits.
+- [ ] 2. Add chat UI dependencies (`flutter_chat_ui`).
+- [ ] 3. Create `PremiumPaywallScreen` UI.
+- [ ] 4. Create `AiChatScreen` UI with chat history and mock responses.
+- [ ] 5. Add AI Chat tab to `RootScreen`.

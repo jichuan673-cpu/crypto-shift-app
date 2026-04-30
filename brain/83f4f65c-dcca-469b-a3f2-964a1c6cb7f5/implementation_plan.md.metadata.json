@@ -1,7 +1,7 @@
 {
   "artifactType":  "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
-  "summary":  "Implementation plan for Push Notification Settings. Details FCM topic subscriptions for new articles, category-specific notifications, and delivery frequency. Includes an open question about the backend server capable of sending these push notifications.",
-  "updatedAt":  "2026-04-30T03:03:22.089411Z",
-  "version":  "3",
+  "summary":  "Implementation plan for adding the AI Chatbot and Premium Memberships features to the app, including UI integration, API security considerations, and RevenueCat integration for subscriptions.",
+  "updatedAt":  "2026-04-30T08:38:06.823480700Z",
+  "version":  "4",
   "requestFeedback":  true
 }
