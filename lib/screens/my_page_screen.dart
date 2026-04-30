@@ -8,6 +8,7 @@ import 'article_detail_screen.dart';
 import 'about_screen.dart';
 import 'help_screen.dart';
 import 'notification_settings_screen.dart';
+import 'premium_paywall_screen.dart';
 
 class MyPageScreen extends StatelessWidget {
   const MyPageScreen({super.key});
@@ -113,13 +114,68 @@ class MyPageScreen extends StatelessWidget {
             ],
           ),
         ),
-        body: const TabBarView(
+        body: Column(
           children: [
-            _ArticleListTab(tabType: _TabType.saved),
-            _ArticleListTab(tabType: _TabType.liked),
-            _ArticleListTab(tabType: _TabType.read),
+            _buildPremiumStatus(context),
+            const Expanded(
+              child: TabBarView(
+                children: [
+                  _ArticleListTab(tabType: _TabType.saved),
+                  _ArticleListTab(tabType: _TabType.liked),
+                  _ArticleListTab(tabType: _TabType.read),
+                ],
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPremiumStatus(BuildContext context) {
+    final isPremium = context.watch<AppState>().isPremium;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      color: isDark ? const Color(0xFF161B22) : Colors.white,
+      child: Row(
+        children: [
+          Icon(
+            isPremium ? Icons.workspace_premium : Icons.stars,
+            color: isPremium ? Colors.amber : Colors.grey,
+            size: 28,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isPremium ? 'プレミアムプラン 加入中' : '無料プラン',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                Text(
+                  isPremium ? '全ての機能が使い放題です' : 'AIチャットが1日3回まで利用可能です',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PremiumPaywallScreen()),
+              );
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF00D2FF),
+            ),
+            child: Text(isPremium ? 'プラン詳細・解約' : 'アップグレード'),
+          ),
+        ],
       ),
     );
   }

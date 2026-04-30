@@ -36,9 +36,9 @@ class RevenueCatService {
 
   static Future<bool> purchasePackage(Package package) async {
     try {
-      final customerInfo = await Purchases.purchasePackage(package);
+      final purchaseResult = await Purchases.purchasePackage(package);
       // TODO: Replace 'premium' with your actual Entitlement ID set up in RevenueCat
-      if (customerInfo.entitlements.all['premium']?.isActive == true) {
+      if (purchaseResult.customerInfo.entitlements.all['premium']?.isActive == true) {
         return true;
       }
     } on PlatformException catch (e) {

@@ -27,7 +27,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
   @override
   void initState() {
     super.initState();
-    _addBotMessage('こんにちは。Crypto Shiftの専属AIアナリストです。仮想通貨や金融に関する疑問があれば何でもお尋ねください。');
+    _addBotMessage('こんにちは。Crypto Shiftの専属AIアナリストです。疑問や質問があれば何でもお尋ねください！');
   }
 
   void _addBotMessage(String text) {
@@ -157,16 +157,13 @@ class _AiChatScreenState extends State<AiChatScreen> {
               messages: _messages,
               onSendPressed: _handleSendPressed,
               user: _user,
-              typingIndicatorOptions: TypingIndicatorOptions(
-                typingUsers: _isTyping ? [_bot] : [],
-              ),
               theme: isDark
-                  ? DarkChatTheme(
-                      backgroundColor: const Color(0xFF0D1117),
-                      primaryColor: const Color(0xFF00D2FF),
-                      secondaryColor: const Color(0xFF161B22),
-                      messageTextColor: Colors.white,
-                      body2: const TextStyle(color: Colors.white),
+                  ? const DarkChatTheme(
+                      backgroundColor: Color(0xFF0D1117),
+                      primaryColor: Color(0xFF00D2FF),
+                      secondaryColor: Color(0xFF161B22),
+                      inputBackgroundColor: Color(0xFF1C2128), // Make input area slightly lighter/distinct
+                      inputTextColor: Colors.white,
                     )
                   : const DefaultChatTheme(
                       primaryColor: Color(0xFF00D2FF),

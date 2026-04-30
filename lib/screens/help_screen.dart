@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
@@ -45,6 +46,8 @@ class HelpScreen extends StatelessWidget {
               _buildFaqItem('Q. 閲覧履歴はいつまで残りますか？', 'A. 端末の容量を圧迫しないよう、閲覧履歴は自動的に直近の100件まで保持される仕組みになっています。', textColor, subtitleColor),
               const Divider(),
               _buildFaqItem('Q. アプリの通知を止めたいです', 'A. お使いのスマートフォンの「設定」アプリ ＞「通知」＞「Crypto Shift」から、プッシュ通知のオン/オフを切り替えることができます。', textColor, subtitleColor),
+              const Divider(),
+              _buildFaqItem('Q. プレミアムプランでできること・解約方法', 'A. 【機能】AIチャットの無制限利用などの限定機能がご利用いただけます。\n【解約】解約手続きは、ご利用のスマートフォンの「設定」アプリ内にある「サブスクリプション（または定期購入）」の項目からいつでも行うことができます。', textColor, subtitleColor),
             ],
           ),
           const SizedBox(height: 24),
@@ -58,18 +61,18 @@ class HelpScreen extends StatelessWidget {
                 title: Text('お問い合わせ', style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 15)),
                 subtitle: Text('不具合のご報告やご要望など', style: TextStyle(color: subtitleColor, fontSize: 13)),
                 trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-                onTap: () {
-                  // If there's an actual contact URL, replace here.
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('お問い合わせは公式サイトよりお願いいたします。')),
-                  );
+                onTap: () async {
+                  final url = Uri.parse('https://crypto-shift.com/%E3%81%8A%E5%95%8F%E3%81%84%E5%90%88%E3%82%8F%E3%81%9B');
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                  }
                 },
               ),
               const Divider(),
               ListTile(
                 leading: Icon(Icons.info_outline, color: textColor),
                 title: Text('アプリバージョン', style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 15)),
-                trailing: Text('1.0.15', style: TextStyle(color: subtitleColor, fontSize: 14)),
+                trailing: Text('1.1.0', style: TextStyle(color: subtitleColor, fontSize: 14)),
               ),
             ],
           ),
