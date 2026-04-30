@@ -8,6 +8,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'providers/app_state.dart';
 import 'screens/root_screen.dart';
+import 'services/revenuecat_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +24,13 @@ void main() async {
     );
   } catch (e) {
     debugPrint('Firebase initialization passed (requires config): $e');
+  }
+
+  // RevenueCat Initialize
+  try {
+    await RevenueCatService.init();
+  } catch (e) {
+    debugPrint('RevenueCat initialization passed (requires config): $e');
   }
 
   await initializeDateFormatting('ja', null);

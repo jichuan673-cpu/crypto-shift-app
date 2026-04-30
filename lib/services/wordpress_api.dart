@@ -53,4 +53,24 @@ class WordPressApi {
     } catch (_) {}
     return [];
   }
+
+  static Future<String> sendChatMessage(List<Map<String, String>> messages) async {
+    const url = 'https://crypto-shift.com/wp-json/cryptoshift/v1/chat';
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'messages': messages}),
+      ).timeout(const Duration(seconds: 40));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['reply'] ?? '申し訳ありません、回答を生成できませんでした。';
+      } else {
+        throw Exception('Server Error: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('通信エラーが発生しました: $e');
+    }
+  }
 }

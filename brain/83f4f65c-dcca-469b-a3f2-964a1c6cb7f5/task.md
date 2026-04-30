@@ -1,7 +1,5 @@
-# Phase 1: AI Chatbot UI Integration
+# Phase 3: AI Brain Integration (WordPress + OpenAI)
 
-- [x] 1. Update `AppState` for premium status and daily limits.
-- [x] 2. Add chat UI dependencies (`flutter_chat_ui`).
-- [x] 3. Create `PremiumPaywallScreen` UI.
-- [x] 4. Create `AiChatScreen` UI with chat history and mock responses.
-- [x] 5. Add AI Chat tab to `RootScreen`.
+- [x] 1. Create the PHP script artifact for the user to paste into WordPress.
+- [x] 2. Update `WordpressApi` to include the `sendChatMessage` function.
+- [x] 3. Update `AiChatScreen` to call the real API instead of the mock delay.

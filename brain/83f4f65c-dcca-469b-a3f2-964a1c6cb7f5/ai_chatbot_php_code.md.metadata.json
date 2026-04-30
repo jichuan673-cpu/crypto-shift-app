@@ -1,0 +1,5 @@
+{
+  "artifactType":  "ARTIFACT_TYPE_OTHER",
+  "summary":  "The PHP script to be added to WordPress via Code Snippets. This script creates the REST API endpoint that receives chat messages from the app, searches for related articles using WP_Query, and queries the OpenAI API to return an analyst-style response.",
+  "updatedAt":  "2026-04-30T09:06:47.062025800Z"
+}

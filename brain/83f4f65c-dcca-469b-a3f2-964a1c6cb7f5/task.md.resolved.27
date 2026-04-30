@@ -1,0 +1,6 @@
+# Phase 2: RevenueCat Integration
+
+- [x] 1. Add `purchases_flutter` dependency.
+- [x] 2. Create `RevenueCatService` to handle initialization and purchases.
+- [x] 3. Update `main.dart` to initialize the service.
+- [x] 4. Update `PremiumPaywallScreen` to fetch and display actual RevenueCat products.

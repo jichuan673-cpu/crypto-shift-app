@@ -1,0 +1,5 @@
+# Phase 3: AI Brain Integration (WordPress + OpenAI)
+
+- [x] 1. Create the PHP script artifact for the user to paste into WordPress.
+- [x] 2. Update `WordpressApi` to include the `sendChatMessage` function.
+- [ ] 3. Update `AiChatScreen` to call the real API instead of the mock delay.

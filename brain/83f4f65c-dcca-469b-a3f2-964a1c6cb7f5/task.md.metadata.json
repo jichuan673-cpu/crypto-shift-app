@@ -1,6 +1,6 @@
 {
   "artifactType":  "ARTIFACT_TYPE_TASK",
-  "summary":  "Phase 1 tasks for the AI Chatbot implementation, including AppState updates, Chat UI creation, Paywall screen creation, and root navigation updates.",
-  "updatedAt":  "2026-04-30T08:43:51.352936900Z",
-  "version":  "19"
+  "summary":  "Phase 3 tasks for the AI Chatbot implementation, focusing on the WordPress PHP endpoint and updating the Flutter app to call the real API.",
+  "updatedAt":  "2026-04-30T09:06:24.696956700Z",
+  "version":  "28"
 }

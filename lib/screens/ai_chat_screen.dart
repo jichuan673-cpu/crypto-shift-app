@@ -4,6 +4,7 @@ import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../providers/app_state.dart';
+import '../services/wordpress_api.dart';
 import 'premium_paywall_screen.dart';
 
 class AiChatScreen extends StatefulWidget {
@@ -15,6 +16,7 @@ class AiChatScreen extends StatefulWidget {
 
 class _AiChatScreenState extends State<AiChatScreen> {
   final List<types.Message> _messages = [];
+  bool _isTyping = false;
   final _user = const types.User(id: 'user_id');
   final _bot = const types.User(
     id: 'bot_id', 
@@ -74,11 +76,36 @@ class _AiChatScreenState extends State<AiChatScreen> {
       appState.incrementAiQueryCount();
     }
 
-    // Show typing indicator or delay for mock response
-    Future.delayed(const Duration(seconds: 1), () {
-      if (!mounted) return;
-      _addBotMessage('【フェーズ1: モック回答】\nご質問ありがとうございます。こちらはテスト用の自動返答です。フェーズ3にて本物のAI（OpenAI等）との連携を行います。');
+    setState(() {
+      _isTyping = true;
     });
+
+    try {
+      // Build message history for the API
+      final apiMessages = _messages.reversed.map((m) {
+        if (m is types.TextMessage) {
+          return {
+            'role': m.author.id == _user.id ? 'user' : 'assistant',
+            'content': m.text,
+          };
+        }
+        return {'role': 'user', 'content': ''};
+      }).where((m) => m['content']!.isNotEmpty).toList();
+
+      final response = await WordPressApi.sendChatMessage(apiMessages);
+      
+      if (!mounted) return;
+      _addBotMessage(response);
+    } catch (e) {
+      if (!mounted) return;
+      _addBotMessage('エラーが発生しました。通信環境を確認するか、後でもう一度お試しください。\n詳細: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isTyping = false;
+        });
+      }
+    }
   }
 
   @override
@@ -130,6 +157,9 @@ class _AiChatScreenState extends State<AiChatScreen> {
               messages: _messages,
               onSendPressed: _handleSendPressed,
               user: _user,
+              typingIndicatorOptions: TypingIndicatorOptions(
+                typingUsers: _isTyping ? [_bot] : [],
+              ),
               theme: isDark
                   ? DarkChatTheme(
                       backgroundColor: const Color(0xFF0D1117),
