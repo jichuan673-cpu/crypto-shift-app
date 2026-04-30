@@ -120,6 +120,16 @@ class _AiChatScreenState extends State<AiChatScreen> {
         backgroundColor: isDark ? const Color(0xFF161B22) : Colors.white,
         foregroundColor: isDark ? Colors.white : Colors.black87,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: '会話をリセット',
+            onPressed: () {
+              setState(() {
+                _messages.clear();
+              });
+              _addBotMessage('こんにちは。Crypto Shiftの専属AIアナリストです。疑問や質問があれば何でもお尋ねください！');
+            },
+          ),
           if (!appState.isPremium)
             Center(
               child: Padding(
@@ -157,6 +167,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
               messages: _messages,
               onSendPressed: _handleSendPressed,
               user: _user,
+              l10n: const ChatL10nEn(inputPlaceholder: 'AIに相談'),
               theme: isDark
                   ? const DarkChatTheme(
                       backgroundColor: Color(0xFF0D1117),

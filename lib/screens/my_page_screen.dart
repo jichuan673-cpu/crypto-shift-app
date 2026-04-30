@@ -165,10 +165,36 @@ class MyPageScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const PremiumPaywallScreen()),
-              );
+              if (isPremium) {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('プラン詳細', style: TextStyle(fontWeight: FontWeight.bold)),
+                    content: const Text(
+                      '【プランでできること】\n'
+                      '・AIチャットの無制限利用\n'
+                      '・ウィークリーレポート配信\n'
+                      '・お好み通知のカスタマイズ\n'
+                      '・広告非表示\n\n'
+                      '【プラン加入月】\n'
+                      '現在ご加入中です\n\n'
+                      '【プラン解約方法】\n'
+                      'Google Playストアアプリの「お支払いと定期購入」＞「定期購入」からいつでも解約手続きが可能です。',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('閉じる'),
+                      ),
+                    ],
+                  ),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const PremiumPaywallScreen()),
+                );
+              }
             },
             style: TextButton.styleFrom(
               foregroundColor: const Color(0xFF00D2FF),

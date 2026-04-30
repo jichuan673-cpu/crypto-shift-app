@@ -47,7 +47,7 @@ class HelpScreen extends StatelessWidget {
               const Divider(),
               _buildFaqItem('Q. アプリの通知を止めたいです', 'A. お使いのスマートフォンの「設定」アプリ ＞「通知」＞「Crypto Shift」から、プッシュ通知のオン/オフを切り替えることができます。', textColor, subtitleColor),
               const Divider(),
-              _buildFaqItem('Q. プレミアムプランでできること・解約方法', 'A. 【機能】AIチャットの無制限利用などの限定機能がご利用いただけます。\n【解約】解約手続きは、ご利用のスマートフォンの「設定」アプリ内にある「サブスクリプション（または定期購入）」の項目からいつでも行うことができます。', textColor, subtitleColor),
+              _buildFaqItem('Q. プレミアムプランでできること・解約方法', 'A. 【機能】AIチャットの無制限利用などの限定機能がご利用いただけます。\n【解約】解約手続きは、ご利用のAndroid端末の「Google Playストア」アプリを開き、右上のプロフィールアイコン ＞「お支払いと定期購入」＞「定期購入」からいつでも行うことができます。', textColor, subtitleColor),
             ],
           ),
           const SizedBox(height: 24),
