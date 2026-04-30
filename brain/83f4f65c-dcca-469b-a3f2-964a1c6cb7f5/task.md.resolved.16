@@ -1,0 +1,5 @@
+# Notification Settings Implementation
+
+- [/] 1. Update `AppState` with notification preferences and FCM topic logic.
+- [ ] 2. Create `NotificationSettingsScreen` UI.
+- [ ] 3. Link `NotificationSettingsScreen` to `MyPageScreen`.

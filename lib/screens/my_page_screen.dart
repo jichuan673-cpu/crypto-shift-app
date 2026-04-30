@@ -6,6 +6,8 @@ import '../providers/app_state.dart';
 import '../models/article.dart';
 import 'article_detail_screen.dart';
 import 'about_screen.dart';
+import 'help_screen.dart';
+import 'notification_settings_screen.dart';
 
 class MyPageScreen extends StatelessWidget {
   const MyPageScreen({super.key});
@@ -49,7 +51,17 @@ class MyPageScreen extends StatelessWidget {
               icon: const Icon(Icons.more_vert),
               tooltip: 'その他',
               onSelected: (value) async {
-                if (value == 'about') {
+                if (value == 'notifications') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const NotificationSettingsScreen()),
+                  );
+                } else if (value == 'help') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HelpScreen()),
+                  );
+                } else if (value == 'about') {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const AboutScreen()),
@@ -67,6 +79,14 @@ class MyPageScreen extends StatelessWidget {
                 }
               },
               itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'notifications',
+                  child: Text('通知設定'),
+                ),
+                const PopupMenuItem(
+                  value: 'help',
+                  child: Text('ヘルプ・使い方'),
+                ),
                 const PopupMenuItem(
                   value: 'about',
                   child: Text('Crypto Shift について'),

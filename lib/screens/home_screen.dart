@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:marquee/marquee.dart';
@@ -36,7 +37,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadCategories() async {
+    final savedOrder = context.read<AppState>().categoryOrder;
     final cats = await WordPressApi.getCategories();
+    
+    if (savedOrder.isNotEmpty) {
+      cats.sort((a, b) {
+        final aIndex = savedOrder.indexOf(a['name'] as String);
+        final bIndex = savedOrder.indexOf(b['name'] as String);
+        if (aIndex == -1 && bIndex == -1) return 0;
+        if (aIndex == -1) return 1;
+        if (bIndex == -1) return -1;
+        return aIndex.compareTo(bIndex);
+      });
+    }
+
     if (mounted) {
       setState(() {
         _categories = cats;
@@ -74,9 +88,55 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    final tabs = [
+    final tabs = <Widget>[
       const Tab(text: 'すべて'),
-      ..._categories.map((c) => Tab(text: c['name'] as String)),
+      ..._categories.asMap().entries.map((e) {
+        final int index = e.key;
+        final c = e.value;
+        final name = c['name'] as String;
+        
+        return DragTarget<int>(
+          onWillAcceptWithDetails: (details) => details.data != index,
+          onAcceptWithDetails: (details) {
+            final fromIndex = details.data;
+            setState(() {
+              final item = _categories.removeAt(fromIndex);
+              _categories.insert(index, item);
+            });
+            context.read<AppState>().updateCategoryOrder(_categories.map((cat) => cat['name'] as String).toList());
+          },
+          builder: (context, candidateData, rejectedData) {
+            final isHovered = candidateData.isNotEmpty;
+            return LongPressDraggable<int>(
+              data: index,
+              feedback: Material(
+                color: Colors.transparent,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF00D2FF).withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                  ),
+                  child: Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+              childWhenDragging: Opacity(
+                opacity: 0.3,
+                child: Tab(text: name),
+              ),
+              child: Container(
+                decoration: isHovered
+                    ? const BoxDecoration(
+                        border: Border(bottom: BorderSide(color: Color(0xFF00D2FF), width: 3)),
+                      )
+                    : null,
+                child: Tab(text: name),
+              ),
+            );
+          },
+        );
+      }),
     ];
 
     final tabViews = [
@@ -241,29 +301,28 @@ class _AutoScrollTicker extends StatefulWidget {
   State<_AutoScrollTicker> createState() => _AutoScrollTickerState();
 }
 
-class _AutoScrollTickerState extends State<_AutoScrollTicker> {
+class _AutoScrollTickerState extends State<_AutoScrollTicker> with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
-  Timer? _timer;
+  late final Ticker _ticker;
+  Duration _lastElapsed = Duration.zero;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startScrolling();
-    });
-  }
-  
-  void _startScrolling() {
-    _timer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
+    _ticker = createTicker((elapsed) {
       if (_scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.offset + 1.2);
+        final delta = (elapsed - _lastElapsed).inMilliseconds * 0.06;
+        _scrollController.jumpTo(_scrollController.offset + delta);
       }
+      _lastElapsed = elapsed;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _ticker.start();
     });
   }
-
   @override
   void dispose() { 
-    _timer?.cancel(); 
+    _ticker.dispose(); 
     _scrollController.dispose(); 
     super.dispose(); 
   }
@@ -403,7 +462,7 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
     
     if (_isLoading && _articles.isEmpty) {
       return ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        padding: EdgeInsets.zero,
         itemCount: 5,
         itemBuilder: (_, __) => _buildShimmerCard(),
       );
@@ -467,11 +526,10 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
     final highlightColor = isDark ? Colors.white.withOpacity(0.15) : Colors.black.withOpacity(0.15);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
         color: cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
+        border: Border(bottom: BorderSide(color: borderColor)),
       ),
       child: Shimmer.fromColors(
         baseColor: baseColor,
@@ -479,32 +537,48 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              height: 160,
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-              ),
+            Row(
+              children: [
+                Container(width: 16, height: 16, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(4))),
+                const SizedBox(width: 8),
+                Container(width: 80, height: 12, color: Colors.white),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(width: double.infinity, height: 16, color: Colors.white),
-                  const SizedBox(height: 8),
-                  Container(width: 200, height: 16, color: Colors.white),
-                  const SizedBox(height: 20),
-                  Row(
+            const SizedBox(height: 10),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(width: 60, height: 20, color: Colors.white),
-                      const Spacer(),
-                      Container(width: 80, height: 12, color: Colors.white),
+                      Container(width: double.infinity, height: 16, color: Colors.white),
+                      const SizedBox(height: 6),
+                      Container(width: double.infinity, height: 16, color: Colors.white),
+                      const SizedBox(height: 6),
+                      Container(width: 120, height: 16, color: Colors.white),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Container(width: 60, height: 12, color: Colors.white),
+                          const Spacer(),
+                          Container(width: 20, height: 20, color: Colors.white),
+                          const SizedBox(width: 8),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  width: 90,
+                  height: 90,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import '../models/article.dart';
 
 class AppState extends ChangeNotifier {
@@ -9,6 +10,11 @@ class AppState extends ChangeNotifier {
   List<int> _savedArticleIds = [];
   List<int> _likedArticleIds = [];
   List<int> _readArticleIds = [];
+  List<String> _categoryOrder = [];
+  
+  bool _notificationsEnabled = true;
+  String _notificationFrequency = 'realtime'; // 'realtime' or 'daily'
+  List<int> _subscribedCategoryIds = [];
   
   // 保存・いいねした記事の詳細データキャッシュ
   Map<String, dynamic> _cachedArticlesData = {};
@@ -18,6 +24,10 @@ class AppState extends ChangeNotifier {
   List<int> get savedArticleIds => _savedArticleIds;
   List<int> get likedArticleIds => _likedArticleIds;
   List<int> get readArticleIds => _readArticleIds;
+  List<String> get categoryOrder => _categoryOrder;
+  bool get notificationsEnabled => _notificationsEnabled;
+  String get notificationFrequency => _notificationFrequency;
+  List<int> get subscribedCategoryIds => _subscribedCategoryIds;
 
   AppState() {
     _loadState();
@@ -31,6 +41,14 @@ class AppState extends ChangeNotifier {
     _savedArticleIds = (prefs.getStringList('savedArticleIds') ?? []).map(int.parse).toList();
     _likedArticleIds = (prefs.getStringList('likedArticleIds') ?? []).map(int.parse).toList();
     _readArticleIds = (prefs.getStringList('readArticleIds') ?? []).map(int.parse).toList();
+    _categoryOrder = prefs.getStringList('categoryOrder') ?? [];
+    
+    _notificationsEnabled = prefs.getBool('notificationsEnabled') ?? true;
+    _notificationFrequency = prefs.getString('notificationFrequency') ?? 'realtime';
+    _subscribedCategoryIds = (prefs.getStringList('subscribedCategoryIds') ?? []).map(int.parse).toList();
+    
+    // アプリ起動時にFCMトピックを同期
+    _syncFcmTopics();
     
     final cachedDataStr = prefs.getString('cachedArticlesData');
     if (cachedDataStr != null) {
@@ -47,6 +65,12 @@ class AppState extends ChangeNotifier {
     await prefs.setStringList('savedArticleIds', _savedArticleIds.map((id) => id.toString()).toList());
     await prefs.setStringList('likedArticleIds', _likedArticleIds.map((id) => id.toString()).toList());
     await prefs.setStringList('readArticleIds', _readArticleIds.map((id) => id.toString()).toList());
+    await prefs.setStringList('categoryOrder', _categoryOrder);
+    
+    await prefs.setBool('notificationsEnabled', _notificationsEnabled);
+    await prefs.setString('notificationFrequency', _notificationFrequency);
+    await prefs.setStringList('subscribedCategoryIds', _subscribedCategoryIds.map((id) => id.toString()).toList());
+
     await prefs.setString('cachedArticlesData', jsonEncode(_cachedArticlesData));
     await prefs.setDouble('fontSizeMultiplier', _fontSizeMultiplier);
   }
@@ -63,6 +87,89 @@ class AppState extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('fontSizeMultiplier', multiplier);
     notifyListeners();
+  }
+
+  Future<void> updateCategoryOrder(List<String> newOrder) async {
+    _categoryOrder = newOrder;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('categoryOrder', _categoryOrder);
+    notifyListeners();
+  }
+
+  // --- FCM Notification Logic ---
+  
+  Future<void> setNotificationsEnabled(bool enabled) async {
+    _notificationsEnabled = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notificationsEnabled', enabled);
+    await _syncFcmTopics();
+    notifyListeners();
+  }
+
+  Future<void> setNotificationFrequency(String frequency) async {
+    _notificationFrequency = frequency;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('notificationFrequency', frequency);
+    await _syncFcmTopics();
+    notifyListeners();
+  }
+
+  Future<void> toggleSubscribedCategory(int categoryId) async {
+    if (_subscribedCategoryIds.contains(categoryId)) {
+      _subscribedCategoryIds.remove(categoryId);
+    } else {
+      _subscribedCategoryIds.add(categoryId);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('subscribedCategoryIds', _subscribedCategoryIds.map((id) => id.toString()).toList());
+    await _syncFcmTopics();
+    notifyListeners();
+  }
+  
+  Future<void> _syncFcmTopics() async {
+    final messaging = FirebaseMessaging.instance;
+    
+    // まず古い可能性のあるものをすべて解除する前提の運用か、
+    // ここではシンプルに現在の設定に基づいて登録・解除を行う
+    if (!_notificationsEnabled) {
+      // 全てオフにする場合は主なトピックを解除
+      await messaging.unsubscribeFromTopic('all_articles_realtime');
+      await messaging.unsubscribeFromTopic('all_articles_daily');
+      for (final id in _subscribedCategoryIds) {
+        await messaging.unsubscribeFromTopic('category_${id}_realtime');
+        await messaging.unsubscribeFromTopic('category_${id}_daily');
+      }
+      return;
+    }
+
+    final isDaily = _notificationFrequency == 'daily';
+    
+    // 全体通知 (カテゴリが1つも選択されていない場合は「すべて」とみなす、もしくは「すべて」購読用のフラグが必要)
+    // ここでは、カテゴリ指定がない場合は全体のトピックを購読する仕様にします
+    if (_subscribedCategoryIds.isEmpty) {
+      if (isDaily) {
+        await messaging.subscribeToTopic('all_articles_daily');
+        await messaging.unsubscribeFromTopic('all_articles_realtime');
+      } else {
+        await messaging.subscribeToTopic('all_articles_realtime');
+        await messaging.unsubscribeFromTopic('all_articles_daily');
+      }
+    } else {
+      // カテゴリ指定がある場合は「すべて」トピックを解除
+      await messaging.unsubscribeFromTopic('all_articles_realtime');
+      await messaging.unsubscribeFromTopic('all_articles_daily');
+      
+      // 各カテゴリごとに設定
+      for (final id in _subscribedCategoryIds) {
+        if (isDaily) {
+          await messaging.subscribeToTopic('category_${id}_daily');
+          await messaging.unsubscribeFromTopic('category_${id}_realtime');
+        } else {
+          await messaging.subscribeToTopic('category_${id}_realtime');
+          await messaging.unsubscribeFromTopic('category_${id}_daily');
+        }
+      }
+    }
   }
 
   Future<void> toggleSave(Article article) async {

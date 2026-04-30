@@ -1,7 +1,7 @@
 {
-  "artifactType": "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
-  "summary": "Implementation plan covering:\n1. Marquee ticker with stock indices (Nikkei, Nasdaq)\n2. Chart time period selection (1D, 1W, 1M)\n3. Privacy policy link on My Page\n4. Article summary text color update",
-  "updatedAt": "2026-04-11T08:26:55.368336900Z",
-  "version": "2",
-  "requestFeedback": true
+  "artifactType":  "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary":  "Implementation plan for Push Notification Settings. Details FCM topic subscriptions for new articles, category-specific notifications, and delivery frequency. Includes an open question about the backend server capable of sending these push notifications.",
+  "updatedAt":  "2026-04-30T03:03:22.089411Z",
+  "version":  "3",
+  "requestFeedback":  true
 }

@@ -210,6 +210,14 @@ class ArticleDetailScreen extends StatelessWidget {
             fontFamily: 'Noto Serif JP, serif', // use body font
           ),
         },
+        onLinkTap: (url, _, __) async {
+          if (url != null) {
+            final uri = Uri.parse(url);
+            if (await canLaunchUrl(uri)) {
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+            }
+          }
+        },
       ),
     );
   }
