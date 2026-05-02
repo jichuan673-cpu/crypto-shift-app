@@ -7,6 +7,7 @@ class Article {
   final String link;
   final String? thumbnailUrl;
   final int? featuredMedia;
+  final List<int> categories;
 
   Article({
     required this.id,
@@ -15,6 +16,7 @@ class Article {
     required this.excerpt,
     required this.date,
     required this.link,
+    required this.categories,
     this.thumbnailUrl,
     this.featuredMedia,
   });
@@ -31,9 +33,10 @@ class Article {
         id: json['id'],
         title: _stripHtml(rawTitle),
         content: rawContent,
-        excerpt: _stripHtml(rawExcerpt),
+        excerpt: rawExcerpt,
         date: json['date'] ?? '',
         link: json['link'] ?? '',
+        categories: List<int>.from(json['categories'] ?? []),
         thumbnailUrl: thumbnailUrl,
       featuredMedia: json['featured_media'],
     );
@@ -47,6 +50,7 @@ class Article {
       'excerpt': excerpt,
       'date': date,
       'link': link,
+      'categories': categories,
       'thumbnailUrl': thumbnailUrl,
       'featuredMedia': featuredMedia,
     };
@@ -60,6 +64,7 @@ class Article {
       excerpt: json['excerpt'],
       date: json['date'],
       link: json['link'],
+      categories: List<int>.from(json['categories'] ?? []),
       thumbnailUrl: json['thumbnailUrl'],
       featuredMedia: json['featuredMedia'],
     );

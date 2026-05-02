@@ -5,7 +5,7 @@ import 'dart:io' show Platform;
 class RevenueCatService {
   // TODO: Replace with your actual RevenueCat Public SDK Keys
   static const String _appleApiKey = 'appl_api_key_placeholder';
-  static const String _googleApiKey = 'goog_api_key_placeholder';
+  static const String _googleApiKey = 'goog_aoSzgRQexaqoEykswkVwfQhxJOG';
 
   static Future<void> init() async {
     await Purchases.setLogLevel(LogLevel.debug);

@@ -12,6 +12,7 @@ import '../services/wordpress_api.dart';
 import '../services/market_data_api.dart';
 import '../providers/app_state.dart';
 import 'article_detail_screen.dart';
+import 'premium_paywall_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -131,7 +132,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         border: Border(bottom: BorderSide(color: Color(0xFF00D2FF), width: 3)),
                       )
                     : null,
-                child: Tab(text: name),
+                child: Tab(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(name),
+                      if (c['id'] == 51 && !context.watch<AppState>().isPremium) ...[
+                        const SizedBox(width: 4),
+                        const Icon(Icons.lock, size: 14, color: Colors.amber),
+                      ],
+                    ],
+                  ),
+                ),
               ),
             );
           },
@@ -139,13 +151,21 @@ class _HomeScreenState extends State<HomeScreen> {
       }),
     ];
 
-    final tabViews = [
+    // Build TabViews - Intercept Weekly Report (ID 51) for non-premium users
+    final isPremium = context.watch<AppState>().isPremium;
+    final tabViews = <Widget>[
       _ArticleList(categoryId: null, categoryName: 'すべて', searchQuery: _searchQuery),
-      ..._categories.map((c) => _ArticleList(
-            categoryId: c['id'] as int,
-            categoryName: c['name'] as String,
-            searchQuery: _searchQuery,
-          )),
+      ..._categories.map<Widget>((c) {
+        final categoryId = c['id'] as int;
+        if (categoryId == 51 && !isPremium) {
+          return const _PremiumLockPlaceholder();
+        }
+        return _ArticleList(
+          categoryId: categoryId,
+          categoryName: c['name'] as String,
+          searchQuery: _searchQuery,
+        );
+      }),
     ];
 
     return DefaultTabController(
@@ -717,5 +737,49 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
     } catch (_) {
       return dateStr;
     }
+  }
+}
+
+class _PremiumLockPlaceholder extends StatelessWidget {
+  const _PremiumLockPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.lock_outline, size: 64, color: Colors.amber),
+          const SizedBox(height: 24),
+          const Text(
+            'ウィークリーレポート',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'このコンテンツはプレミアムプラン限定です。\n加入すると最新の市場分析レポートが読み放題になります。',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey),
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PremiumPaywallScreen()),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00D2FF),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            ),
+            child: const Text('プレミアムプランの詳細を見る', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 }

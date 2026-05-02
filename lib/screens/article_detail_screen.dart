@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/article.dart';
 import '../providers/app_state.dart';
+import 'premium_paywall_screen.dart';
 import 'package:intl/intl.dart';
 
 class ArticleDetailScreen extends StatelessWidget {
@@ -130,94 +131,156 @@ class ArticleDetailScreen extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context, bool isDark) {
-    final scale = context.watch<AppState>().fontSizeMultiplier;
+    final appState = context.watch<AppState>();
+    final isPremium = appState.isPremium;
+    final scale = appState.fontSizeMultiplier;
     final textColor = isDark ? const Color(0xFFDDE1E7) : Colors.black87;
     final headingColor = isDark ? Colors.white : Colors.black;
     final dividerColor = isDark ? Colors.white24 : Colors.black12;
     final codeBgColor = isDark ? const Color(0xFF161B22) : const Color(0xFFF0F2F5);
 
+    // Check for premium restriction (Category ID 52)
+    final bool isRestricted = article.categories.contains(52) && !isPremium;
+    final displayContent = isRestricted ? article.excerpt : article.content;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-      child: Html(
-        data: article.content,
-        style: {
-          'body': Style(
-            color: textColor,
-            fontSize: FontSize(16 * scale),
-            lineHeight: const LineHeight(1.8),
-            fontFamily: 'Noto Serif JP, serif',
+      child: Column(
+        children: [
+          Html(
+            data: displayContent,
+            style: {
+              'body': Style(
+                color: textColor,
+                fontSize: FontSize(16 * scale),
+                lineHeight: const LineHeight(1.8),
+                fontFamily: 'Noto Serif JP, serif',
+              ),
+              '.summary': Style(color: textColor),
+              '.lead': Style(color: textColor),
+              'span': Style(color: textColor),
+              'h1': Style(
+                color: headingColor,
+                fontWeight: FontWeight.bold,
+                fontSize: FontSize(22 * scale),
+                margin: Margins.only(top: 28, bottom: 12),
+                border: Border(bottom: BorderSide(color: dividerColor, width: 1)),
+                padding: HtmlPaddings.only(bottom: 8),
+              ),
+              'h2': Style(
+                color: headingColor,
+                fontWeight: FontWeight.bold,
+                fontSize: FontSize(20 * scale),
+                margin: Margins.only(top: 24, bottom: 10),
+                padding: HtmlPaddings.only(bottom: 8),
+                border: const Border(left: BorderSide(color: Color(0xFF00D2FF), width: 4)),
+              ),
+              'h3': Style(
+                color: headingColor,
+                fontWeight: FontWeight.bold,
+                fontSize: FontSize(18 * scale),
+                margin: Margins.only(top: 20, bottom: 8),
+              ),
+              'p': Style(
+                margin: Margins.only(bottom: 20),
+                color: isDark ? const Color(0xFFCDD5E0) : Colors.black87,
+              ),
+              'a': Style(
+                color: const Color(0xFF00D2FF),
+                textDecoration: TextDecoration.none,
+              ),
+              'strong': Style(
+                color: headingColor,
+                fontWeight: FontWeight.bold,
+              ),
+              'img': Style(
+                margin: Margins.symmetric(vertical: 16, horizontal: 0),
+                padding: HtmlPaddings.zero,
+                alignment: Alignment.center,
+              ),
+              'blockquote': Style(
+                color: isDark ? Colors.white70 : Colors.black54,
+                backgroundColor: codeBgColor,
+                padding: HtmlPaddings.all(16),
+                margin: Margins.only(bottom: 20),
+                border: const Border(left: BorderSide(color: Color(0xFF7B2FBE), width: 4)),
+              ),
+              'code': Style(
+                backgroundColor: codeBgColor,
+                color: textColor,
+                fontFamily: 'Noto Serif JP, serif',
+              ),
+              'pre': Style(
+                backgroundColor: codeBgColor,
+                color: textColor,
+                padding: HtmlPaddings.all(16),
+                margin: Margins.only(bottom: 20),
+                border: Border.all(color: dividerColor),
+                fontFamily: 'Noto Serif JP, serif',
+              ),
+            },
+            onLinkTap: (url, _, __) async {
+              if (url != null) {
+                final uri = Uri.parse(url);
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
+              }
+            },
           ),
-          '.summary': Style(color: textColor),
-          '.lead': Style(color: textColor),
-          'span': Style(color: textColor),
-          'h1': Style(
-            color: headingColor,
-            fontWeight: FontWeight.bold,
-            fontSize: FontSize(22 * scale),
-            margin: Margins.only(top: 28, bottom: 12),
-            border: Border(bottom: BorderSide(color: dividerColor, width: 1)),
-            padding: HtmlPaddings.only(bottom: 8),
+          if (isRestricted) _buildPremiumWall(context, isDark),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPremiumWall(BuildContext context, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.only(top: 24, bottom: 40),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1C212B) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          'h2': Style(
-            color: headingColor,
-            fontWeight: FontWeight.bold,
-            fontSize: FontSize(20 * scale),
-            margin: Margins.only(top: 24, bottom: 10),
-            padding: HtmlPaddings.only(bottom: 8),
-            border: const Border(left: BorderSide(color: Color(0xFF00D2FF), width: 4)),
+        ],
+        border: Border.all(color: const Color(0xFF00D2FF).withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.lock_outline, size: 40, color: Colors.amber),
+          const SizedBox(height: 16),
+          const Text(
+            'この記事の続きはプレミアム限定です',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          'h3': Style(
-            color: headingColor,
-            fontWeight: FontWeight.bold,
-            fontSize: FontSize(18 * scale),
-            margin: Margins.only(top: 20, bottom: 8),
+          const SizedBox(height: 12),
+          const Text(
+            'プレミアムプランに加入すると、限定ニュースや特別レポートの全文を閲覧いただけます。',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey, fontSize: 14),
           ),
-          'p': Style(
-            margin: Margins.only(bottom: 20),
-            color: isDark ? const Color(0xFFCDD5E0) : Colors.black87,
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PremiumPaywallScreen()),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00D2FF),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            ),
+            child: const Text('プレミアムプランを見る', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
-          'a': Style(
-            color: const Color(0xFF00D2FF),
-            textDecoration: TextDecoration.none,
-          ),
-          'strong': Style(
-            color: headingColor,
-            fontWeight: FontWeight.bold,
-          ),
-          'img': Style(
-            margin: Margins.symmetric(vertical: 16, horizontal: 0),
-            padding: HtmlPaddings.zero,
-            alignment: Alignment.center,
-          ),
-          'blockquote': Style(
-            color: isDark ? Colors.white70 : Colors.black54,
-            backgroundColor: codeBgColor,
-            padding: HtmlPaddings.all(16),
-            margin: Margins.only(bottom: 20),
-            border: const Border(left: BorderSide(color: Color(0xFF7B2FBE), width: 4)),
-          ),
-          'code': Style(
-            backgroundColor: codeBgColor,
-            color: textColor, // use body text color
-            fontFamily: 'Noto Serif JP, serif', // use body font
-          ),
-          'pre': Style(
-            backgroundColor: codeBgColor,
-            color: textColor, // use body text color
-            padding: HtmlPaddings.all(16),
-            margin: Margins.only(bottom: 20),
-            border: Border.all(color: dividerColor),
-            fontFamily: 'Noto Serif JP, serif', // use body font
-          ),
-        },
-        onLinkTap: (url, _, __) async {
-          if (url != null) {
-            final uri = Uri.parse(url);
-            if (await canLaunchUrl(uri)) {
-              await launchUrl(uri, mode: LaunchMode.externalApplication);
-            }
-          }
-        },
+        ],
       ),
     );
   }
@@ -258,7 +321,6 @@ class ArticleDetailScreen extends StatelessWidget {
     final isLiked = appState.isLiked(article.id);
     final isSaved = appState.isSaved(article.id);
 
-    // モックのいいね数（通常はAPIから取得しますが今回はローカル状態のみ）
     final likeCount = isLiked ? 1 : 0;
     
     final bgColor = isDark ? const Color(0xFF0D1117).withOpacity(0.95) : Colors.white.withOpacity(0.95);
