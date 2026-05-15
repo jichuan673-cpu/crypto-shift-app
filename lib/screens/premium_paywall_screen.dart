@@ -27,10 +27,9 @@ class PremiumPaywallScreen extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: Image.asset(
-                'assets/app_logo.png',
-                width: 80,
-                height: 80,
-                fit: BoxFit.cover,
+                'assets/logp2.jpg',
+                width: double.infinity,
+                fit: BoxFit.contain,
               ),
             ),
             const SizedBox(height: 16),

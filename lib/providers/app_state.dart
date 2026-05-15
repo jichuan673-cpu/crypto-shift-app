@@ -13,7 +13,8 @@ class AppState extends ChangeNotifier {
   List<String> _categoryOrder = [];
   
   bool _notificationsEnabled = true;
-  String _notificationFrequency = 'realtime'; // 'realtime' or 'daily'
+  String _notificationFrequency = 'realtime'; // 'realtime' or 'scheduled'
+  String _notificationScheduledTime = '08:00'; // HH:mm format
   List<int> _subscribedCategoryIds = [];
   
   // AI Chat & Premium State
@@ -34,6 +35,7 @@ class AppState extends ChangeNotifier {
   List<String> get categoryOrder => _categoryOrder;
   bool get notificationsEnabled => _notificationsEnabled;
   String get notificationFrequency => _notificationFrequency;
+  String get notificationScheduledTime => _notificationScheduledTime;
   List<int> get subscribedCategoryIds => _subscribedCategoryIds;
   bool get isPremium => _isPremium;
   String get premiumJoinDate => _premiumJoinDate;
@@ -57,6 +59,7 @@ class AppState extends ChangeNotifier {
     
     _notificationsEnabled = prefs.getBool('notificationsEnabled') ?? true;
     _notificationFrequency = prefs.getString('notificationFrequency') ?? 'realtime';
+    _notificationScheduledTime = prefs.getString('notificationScheduledTime') ?? '08:00';
     _subscribedCategoryIds = (prefs.getStringList('subscribedCategoryIds') ?? []).map(int.parse).toList();
     
     _isPremium = prefs.getBool('isPremium') ?? false;
@@ -93,6 +96,7 @@ class AppState extends ChangeNotifier {
     
     await prefs.setBool('notificationsEnabled', _notificationsEnabled);
     await prefs.setString('notificationFrequency', _notificationFrequency);
+    await prefs.setString('notificationScheduledTime', _notificationScheduledTime);
     await prefs.setStringList('subscribedCategoryIds', _subscribedCategoryIds.map((id) => id.toString()).toList());
 
     await prefs.setBool('isPremium', _isPremium);
@@ -174,6 +178,14 @@ class AppState extends ChangeNotifier {
     _syncFcmTopics();
   }
 
+  Future<void> setNotificationScheduledTime(String time) async {
+    _notificationScheduledTime = time;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('notificationScheduledTime', time);
+    _syncFcmTopics();
+  }
+
   Future<void> toggleSubscribedCategory(int categoryId) async {
     if (_subscribedCategoryIds.contains(categoryId)) {
       _subscribedCategoryIds.remove(categoryId);
@@ -192,41 +204,36 @@ class AppState extends ChangeNotifier {
     // まず古い可能性のあるものをすべて解除する前提の運用か、
     // ここではシンプルに現在の設定に基づいて登録・解除を行う
     if (!_notificationsEnabled) {
-      // 全てオフにする場合は主なトピックを解除
       await messaging.unsubscribeFromTopic('all_articles_realtime');
-      await messaging.unsubscribeFromTopic('all_articles_daily');
+      await messaging.unsubscribeFromTopic('all_articles_scheduled');
       for (final id in _subscribedCategoryIds) {
         await messaging.unsubscribeFromTopic('category_${id}_realtime');
-        await messaging.unsubscribeFromTopic('category_${id}_daily');
+        await messaging.unsubscribeFromTopic('category_${id}_scheduled');
       }
       return;
     }
 
-    final isDaily = _notificationFrequency == 'daily';
-    
-    // 全体通知 (カテゴリが1つも選択されていない場合は「すべて」とみなす、もしくは「すべて」購読用のフラグが必要)
-    // ここでは、カテゴリ指定がない場合は全体のトピックを購読する仕様にします
+    final isScheduled = _notificationFrequency == 'scheduled';
+
     if (_subscribedCategoryIds.isEmpty) {
-      if (isDaily) {
-        await messaging.subscribeToTopic('all_articles_daily');
+      if (isScheduled) {
+        await messaging.subscribeToTopic('all_articles_scheduled');
         await messaging.unsubscribeFromTopic('all_articles_realtime');
       } else {
         await messaging.subscribeToTopic('all_articles_realtime');
-        await messaging.unsubscribeFromTopic('all_articles_daily');
+        await messaging.unsubscribeFromTopic('all_articles_scheduled');
       }
     } else {
-      // カテゴリ指定がある場合は「すべて」トピックを解除
       await messaging.unsubscribeFromTopic('all_articles_realtime');
-      await messaging.unsubscribeFromTopic('all_articles_daily');
-      
-      // 各カテゴリごとに設定
+      await messaging.unsubscribeFromTopic('all_articles_scheduled');
+
       for (final id in _subscribedCategoryIds) {
-        if (isDaily) {
-          await messaging.subscribeToTopic('category_${id}_daily');
+        if (isScheduled) {
+          await messaging.subscribeToTopic('category_${id}_scheduled');
           await messaging.unsubscribeFromTopic('category_${id}_realtime');
         } else {
           await messaging.subscribeToTopic('category_${id}_realtime');
-          await messaging.unsubscribeFromTopic('category_${id}_daily');
+          await messaging.unsubscribeFromTopic('category_${id}_scheduled');
         }
       }
     }

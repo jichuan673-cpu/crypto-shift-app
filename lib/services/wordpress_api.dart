@@ -9,11 +9,14 @@ class WordPressApi {
     int page = 1,
     int perPage = 10,
     int? categoryId,
+    List<int>? categoryIds,
     String? searchQuery,
   }) async {
     String url = '$_baseUrl/posts?page=$page&per_page=$perPage&_embed=1';
 
-    if (categoryId != null) {
+    if (categoryIds != null && categoryIds.isNotEmpty) {
+      url += '&categories=${categoryIds.join(',')}';
+    } else if (categoryId != null) {
       url += '&categories=$categoryId';
     }
     if (searchQuery != null && searchQuery.isNotEmpty) {
@@ -40,14 +43,18 @@ class WordPressApi {
   static Future<List<Map<String, dynamic>>> getCategories() async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/categories?per_page=20'),
+        Uri.parse('$_baseUrl/categories?per_page=100'),
         headers: {'Accept': 'application/json'},
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         return data
-            .map((c) => {'id': c['id'], 'name': c['name'] as String})
+            .map((c) => {
+                  'id': c['id'] as int,
+                  'name': c['name'] as String,
+                  'parent': c['parent'] as int,
+                })
             .toList();
       }
     } catch (_) {}

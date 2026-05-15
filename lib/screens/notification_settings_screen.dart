@@ -24,9 +24,30 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     final cats = await WordPressApi.getCategories();
     if (mounted) {
       setState(() {
-        _categories = cats;
+        _categories = cats.where((c) => (c['name'] as String).toLowerCase() != 'premium').toList();
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _pickScheduledTime(BuildContext context, AppState appState) async {
+    final parts = appState.notificationScheduledTime.split(':');
+    final initial = TimeOfDay(
+      hour: int.tryParse(parts[0]) ?? 8,
+      minute: int.tryParse(parts[1]) ?? 0,
+    );
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: initial,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+        child: child!,
+      ),
+    );
+    if (picked != null) {
+      final timeStr =
+          '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+      appState.setNotificationScheduledTime(timeStr);
     }
   }
 
@@ -83,15 +104,51 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                 ),
                 const Divider(height: 1),
                 RadioListTile<String>(
-                  title: Text('1日1回のまとめ (ダイジェスト)', style: TextStyle(color: textColor)),
-                  subtitle: Text('1日の新着記事をまとめて1回だけ通知します', style: TextStyle(color: subtitleColor, fontSize: 12)),
-                  value: 'daily',
+                  title: Text('時間指定', style: TextStyle(color: textColor)),
+                  subtitle: Text('指定した時間に新着記事をまとめて通知します', style: TextStyle(color: subtitleColor, fontSize: 12)),
+                  value: 'scheduled',
                   groupValue: appState.notificationFrequency,
                   activeColor: const Color(0xFF555555),
                   onChanged: (val) {
                     if (val != null) appState.setNotificationFrequency(val);
                   },
                 ),
+                if (appState.notificationFrequency == 'scheduled') ...[
+                  const Divider(height: 1),
+                  InkWell(
+                    onTap: () => _pickScheduledTime(context, appState),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      child: Row(
+                        children: [
+                          Icon(Icons.access_time, size: 20, color: const Color(0xFF555555)),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('配信時間', style: TextStyle(color: textColor, fontWeight: FontWeight.w500)),
+                                const SizedBox(height: 2),
+                                Text('タップして時間を変更', style: TextStyle(color: subtitleColor, fontSize: 12)),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            appState.notificationScheduledTime,
+                            style: TextStyle(
+                              color: const Color(0xFF555555),
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              fontFeatures: const [FontFeature.tabularFigures()],
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(Icons.chevron_right, size: 20, color: subtitleColor),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
 

@@ -54,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (mounted) {
       setState(() {
-        _categories = cats;
+        _categories = cats.where((c) => (c['name'] as String).toLowerCase() != 'premium').toList();
         _isLoadingCategories = false;
       });
     }
@@ -160,8 +160,15 @@ class _HomeScreenState extends State<HomeScreen> {
         if (categoryId == 51 && !isPremium) {
           return const _PremiumLockPlaceholder();
         }
+        // 子カテゴリのIDもまとめて渡す（子カテゴリの記事も表示するため）
+        final childIds = _categories
+            .where((child) => child['parent'] == categoryId)
+            .map((child) => child['id'] as int)
+            .toList();
+        final allIds = [categoryId, ...childIds];
         return _ArticleList(
           categoryId: categoryId,
+          categoryIds: allIds.length > 1 ? allIds : null,
           categoryName: c['name'] as String,
           searchQuery: _searchQuery,
         );
@@ -362,11 +369,13 @@ class _AutoScrollTickerState extends State<_AutoScrollTicker> with SingleTickerP
 
 class _ArticleList extends StatefulWidget {
   final int? categoryId;
+  final List<int>? categoryIds;
   final String categoryName;
   final String? searchQuery;
 
   const _ArticleList({
     required this.categoryId,
+    this.categoryIds,
     required this.categoryName,
     this.searchQuery,
   });
@@ -433,7 +442,8 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
       final posts = await WordPressApi.getPosts(
         page: _currentPage,
         perPage: 10,
-        categoryId: widget.categoryId,
+        categoryId: widget.categoryIds == null ? widget.categoryId : null,
+        categoryIds: widget.categoryIds,
         searchQuery: widget.searchQuery != null && widget.searchQuery!.isNotEmpty ? widget.searchQuery : null,
       );
       if (mounted) {
@@ -461,7 +471,8 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
       final posts = await WordPressApi.getPosts(
         page: _currentPage,
         perPage: 10,
-        categoryId: widget.categoryId,
+        categoryId: widget.categoryIds == null ? widget.categoryId : null,
+        categoryIds: widget.categoryIds,
         searchQuery: widget.searchQuery != null && widget.searchQuery!.isNotEmpty ? widget.searchQuery : null,
       );
       if (mounted) {
