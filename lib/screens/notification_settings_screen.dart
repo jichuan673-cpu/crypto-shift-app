@@ -56,7 +56,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
               SwitchListTile(
                 title: Text('通知を受け取る', style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
                 subtitle: Text('新着記事や重要なお知らせを受け取ります', style: TextStyle(color: subtitleColor, fontSize: 12)),
-                activeColor: const Color(0xFF00D2FF),
+                activeColor: const Color(0xFF555555),
                 value: appState.notificationsEnabled,
                 onChanged: (val) {
                   appState.setNotificationsEnabled(val);
@@ -76,7 +76,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                   subtitle: Text('記事が追加されるたびに通知します', style: TextStyle(color: subtitleColor, fontSize: 12)),
                   value: 'realtime',
                   groupValue: appState.notificationFrequency,
-                  activeColor: const Color(0xFF00D2FF),
+                  activeColor: const Color(0xFF555555),
                   onChanged: (val) {
                     if (val != null) appState.setNotificationFrequency(val);
                   },
@@ -87,7 +87,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                   subtitle: Text('1日の新着記事をまとめて1回だけ通知します', style: TextStyle(color: subtitleColor, fontSize: 12)),
                   value: 'daily',
                   groupValue: appState.notificationFrequency,
-                  activeColor: const Color(0xFF00D2FF),
+                  activeColor: const Color(0xFF555555),
                   onChanged: (val) {
                     if (val != null) appState.setNotificationFrequency(val);
                   },
@@ -108,7 +108,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
               const Center(
                 child: Padding(
                   padding: EdgeInsets.all(32.0),
-                  child: CircularProgressIndicator(color: Color(0xFF00D2FF)),
+                  child: CircularProgressIndicator(color: const Color(0xFF555555)),
                 ),
               )
             else
@@ -121,7 +121,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                     children: [
                       CheckboxListTile(
                         title: Text(cat['name'] as String, style: TextStyle(color: textColor)),
-                        activeColor: const Color(0xFF00D2FF),
+                        activeColor: const Color(0xFF555555),
                         value: isSelected,
                         onChanged: (val) {
                           appState.toggleSubscribedCategory(catId);
@@ -167,8 +167,13 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
           ),
         ],
       ),
-      child: Column(
-        children: children,
+      child: Material(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(12),
+        clipBehavior: Clip.hardEdge,
+        child: Column(
+          children: children,
+        ),
       ),
     );
   }

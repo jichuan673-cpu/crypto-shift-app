@@ -18,6 +18,7 @@ class AppState extends ChangeNotifier {
   
   // AI Chat & Premium State
   bool _isPremium = false;
+  String _premiumJoinDate = '';
   int _aiDailyQueryCount = 0;
   String _aiLastQueryDate = '';
 
@@ -34,11 +35,11 @@ class AppState extends ChangeNotifier {
   bool get notificationsEnabled => _notificationsEnabled;
   String get notificationFrequency => _notificationFrequency;
   List<int> get subscribedCategoryIds => _subscribedCategoryIds;
-  
   bool get isPremium => _isPremium;
+  String get premiumJoinDate => _premiumJoinDate;
   int get aiDailyQueryCount => _aiDailyQueryCount;
-  int get aiMaxDailyQueries => 3;
-  bool get canUseAiChat => _isPremium || _aiDailyQueryCount < aiMaxDailyQueries;
+  int get aiMaxDailyQueries => _isPremium ? 30 : 3;
+  bool get canUseAiChat => _aiDailyQueryCount < aiMaxDailyQueries;
 
   AppState() {
     _loadState();
@@ -59,6 +60,7 @@ class AppState extends ChangeNotifier {
     _subscribedCategoryIds = (prefs.getStringList('subscribedCategoryIds') ?? []).map(int.parse).toList();
     
     _isPremium = prefs.getBool('isPremium') ?? false;
+    _premiumJoinDate = prefs.getString('premiumJoinDate') ?? '';
     _aiDailyQueryCount = prefs.getInt('aiDailyQueryCount') ?? 0;
     _aiLastQueryDate = prefs.getString('aiLastQueryDate') ?? '';
     
@@ -94,6 +96,7 @@ class AppState extends ChangeNotifier {
     await prefs.setStringList('subscribedCategoryIds', _subscribedCategoryIds.map((id) => id.toString()).toList());
 
     await prefs.setBool('isPremium', _isPremium);
+    await prefs.setString('premiumJoinDate', _premiumJoinDate);
     await prefs.setInt('aiDailyQueryCount', _aiDailyQueryCount);
     await prefs.setString('aiLastQueryDate', _aiLastQueryDate);
 
@@ -138,10 +141,18 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setPremiumStatus(bool isPremium) async {
+  Future<void> setPremiumStatus(bool isPremium, [String joinDate = '']) async {
     _isPremium = isPremium;
+    if (joinDate.isNotEmpty) {
+      _premiumJoinDate = joinDate;
+    } else if (isPremium && _premiumJoinDate.isEmpty) {
+      _premiumJoinDate = DateTime.now().toIso8601String().split('T')[0];
+    } else if (!isPremium) {
+      _premiumJoinDate = '';
+    }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isPremium', isPremium);
+    await prefs.setString('premiumJoinDate', _premiumJoinDate);
     notifyListeners();
   }
 
@@ -149,18 +160,18 @@ class AppState extends ChangeNotifier {
   
   Future<void> setNotificationsEnabled(bool enabled) async {
     _notificationsEnabled = enabled;
+    notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('notificationsEnabled', enabled);
-    await _syncFcmTopics();
-    notifyListeners();
+    _syncFcmTopics();
   }
 
   Future<void> setNotificationFrequency(String frequency) async {
     _notificationFrequency = frequency;
+    notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('notificationFrequency', frequency);
-    await _syncFcmTopics();
-    notifyListeners();
+    _syncFcmTopics();
   }
 
   Future<void> toggleSubscribedCategory(int categoryId) async {
@@ -169,10 +180,10 @@ class AppState extends ChangeNotifier {
     } else {
       _subscribedCategoryIds.add(categoryId);
     }
+    notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('subscribedCategoryIds', _subscribedCategoryIds.map((id) => id.toString()).toList());
-    await _syncFcmTopics();
-    notifyListeners();
+    _syncFcmTopics();
   }
   
   Future<void> _syncFcmTopics() async {

@@ -136,7 +136,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 padding: const EdgeInsets.only(right: 16.0),
                 child: Text(
                   '残り ${appState.aiMaxDailyQueries - appState.aiDailyQueryCount}回',
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF00D2FF)),
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: const Color(0xFF555555)),
                 ),
               ),
             ),
@@ -148,10 +148,10 @@ class _AiChatScreenState extends State<AiChatScreen> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            color: const Color(0xFF00D2FF).withOpacity(0.1),
+            color: const Color(0xFF555555).withOpacity(0.1),
             child: Row(
               children: [
-                const Icon(Icons.info_outline, size: 16, color: Color(0xFF00D2FF)),
+                const Icon(Icons.info_outline, size: 16, color: const Color(0xFF555555)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -171,13 +171,13 @@ class _AiChatScreenState extends State<AiChatScreen> {
               theme: isDark
                   ? const DarkChatTheme(
                       backgroundColor: Color(0xFF0D1117),
-                      primaryColor: Color(0xFF00D2FF),
+                      primaryColor: const Color(0xFF555555),
                       secondaryColor: Color(0xFF161B22),
                       inputBackgroundColor: Color(0xFF1C2128), // Make input area slightly lighter/distinct
                       inputTextColor: Colors.white,
                     )
                   : const DefaultChatTheme(
-                      primaryColor: Color(0xFF00D2FF),
+                      primaryColor: const Color(0xFF555555),
                     ),
             ),
           ),

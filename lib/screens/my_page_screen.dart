@@ -9,6 +9,7 @@ import 'about_screen.dart';
 import 'help_screen.dart';
 import 'notification_settings_screen.dart';
 import 'premium_paywall_screen.dart';
+import 'plan_details_screen.dart';
 
 class MyPageScreen extends StatelessWidget {
   const MyPageScreen({super.key});
@@ -104,8 +105,8 @@ class MyPageScreen extends StatelessWidget {
             ),
           ],
           bottom: const TabBar(
-            indicatorColor: Color(0xFF00D2FF),
-            labelColor: Color(0xFF00D2FF),
+            indicatorColor: const Color(0xFF555555),
+            labelColor: const Color(0xFF555555),
             unselectedLabelColor: Colors.grey,
             tabs: [
               Tab(text: '保存済み'),
@@ -136,72 +137,46 @@ class MyPageScreen extends StatelessWidget {
     final isPremium = context.watch<AppState>().isPremium;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: isDark ? const Color(0xFF161B22) : Colors.white,
-      child: Row(
-        children: [
-          Icon(
-            isPremium ? Icons.workspace_premium : Icons.stars,
-            color: isPremium ? Colors.amber : Colors.grey,
-            size: 28,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isPremium ? 'プレミアムプラン 加入中' : '無料プラン',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                Text(
-                  isPremium ? '全ての機能が使い放題です' : 'AIチャットが1日3回まで利用可能です',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
+    return InkWell(
+      onTap: () {
+        if (isPremium) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const PlanDetailsScreen()),
+          );
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const PremiumPaywallScreen()),
+          );
+        }
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        color: isDark ? const Color(0xFF161B22) : Colors.white,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Image.asset(
+                'assets/app_logo.png',
+                width: 24,
+                height: 24,
+              ),
             ),
-          ),
-          TextButton(
-            onPressed: () {
-              if (isPremium) {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('プラン詳細', style: TextStyle(fontWeight: FontWeight.bold)),
-                    content: const Text(
-                      '【プランでできること】\n'
-                      '・AIチャットの無制限利用\n'
-                      '・ウィークリーレポート配信\n'
-                      '・お好み通知のカスタマイズ\n'
-                      '・広告非表示\n\n'
-                      '【プラン加入月】\n'
-                      '現在ご加入中です\n\n'
-                      '【プラン解約方法】\n'
-                      'Google Playストアアプリの「お支払いと定期購入」＞「定期購入」からいつでも解約手続きが可能です。',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('閉じる'),
-                      ),
-                    ],
-                  ),
-                );
-              } else {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const PremiumPaywallScreen()),
-                );
-              }
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF00D2FF),
+            const SizedBox(width: 12),
+            const Text(
+              'PREMIUM',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 22,
+                letterSpacing: 2.0,
+              ),
             ),
-            child: Text(isPremium ? 'プラン詳細・解約' : 'アップグレード'),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -302,7 +277,7 @@ class _ArticleListTab extends StatelessWidget {
                               ? Icons.favorite
                               : Icons.access_time,
                       size: 14,
-                      color: const Color(0xFF00D2FF),
+                      color: const Color(0xFF555555),
                     ),
                     const SizedBox(width: 6),
                     Text(

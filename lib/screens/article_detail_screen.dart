@@ -173,7 +173,7 @@ class ArticleDetailScreen extends StatelessWidget {
                 fontSize: FontSize(20 * scale),
                 margin: Margins.only(top: 24, bottom: 10),
                 padding: HtmlPaddings.only(bottom: 8),
-                border: const Border(left: BorderSide(color: Color(0xFF00D2FF), width: 4)),
+                border: const Border(left: BorderSide(color: const Color(0xFF555555), width: 4)),
               ),
               'h3': Style(
                 color: headingColor,
@@ -186,7 +186,7 @@ class ArticleDetailScreen extends StatelessWidget {
                 color: isDark ? const Color(0xFFCDD5E0) : Colors.black87,
               ),
               'a': Style(
-                color: const Color(0xFF00D2FF),
+                color: const Color(0xFF555555),
                 textDecoration: TextDecoration.none,
               ),
               'strong': Style(
@@ -248,11 +248,11 @@ class ArticleDetailScreen extends StatelessWidget {
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: const Color(0xFF00D2FF).withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFF555555).withOpacity(0.3)),
       ),
       child: Column(
         children: [
-          const Icon(Icons.lock_outline, size: 40, color: Colors.amber),
+          Icon(Icons.lock_outline, size: 40, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
           const SizedBox(height: 16),
           const Text(
             'この記事の続きはプレミアム限定です',
@@ -273,7 +273,7 @@ class ArticleDetailScreen extends StatelessWidget {
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00D2FF),
+              backgroundColor: const Color(0xFF555555),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
@@ -304,8 +304,8 @@ class ArticleDetailScreen extends StatelessWidget {
                 }
               },
               style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF00D2FF),
-                side: const BorderSide(color: Color(0xFF00D2FF)),
+                foregroundColor: const Color(0xFF555555),
+                side: const BorderSide(color: const Color(0xFF555555)),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -374,7 +374,7 @@ class ArticleDetailScreen extends StatelessWidget {
               IconButton(
                 icon: Icon(
                   isSaved ? Icons.bookmark : Icons.bookmark_border,
-                  color: isSaved ? const Color(0xFF00D2FF) : iconColor,
+                  color: isSaved ? const Color(0xFF555555) : iconColor,
                   size: 26,
                 ),
                 onPressed: () => appState.toggleSave(article),

@@ -121,7 +121,7 @@ class HelpScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: const Color(0xFF00D2FF), size: 24),
+          Icon(icon, color: const Color(0xFF555555), size: 24),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -175,7 +175,7 @@ class HelpScreen extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('A.', style: TextStyle(color: const Color(0xFF00D2FF), fontWeight: FontWeight.bold, fontSize: 15)),
+              Text('A.', style: TextStyle(color: const Color(0xFF555555), fontWeight: FontWeight.bold, fontSize: 15)),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(

@@ -70,7 +70,7 @@ class CryptoShiftApp extends StatelessWidget {
           themeMode: appState.isDarkMode ? ThemeMode.dark : ThemeMode.light,
           darkTheme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF00D2FF),
+              seedColor: const Color(0xFF555555),
               brightness: Brightness.dark,
             ),
             useMaterial3: true,
@@ -84,7 +84,7 @@ class CryptoShiftApp extends StatelessWidget {
           ),
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF00D2FF),
+              seedColor: const Color(0xFF555555),
               brightness: Brightness.light,
             ),
             useMaterial3: true,

@@ -24,7 +24,15 @@ class PremiumPaywallScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(Icons.workspace_premium, size: 80, color: Color(0xFF00D2FF)),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.asset(
+                'assets/app_logo.png',
+                width: 80,
+                height: 80,
+                fit: BoxFit.cover,
+              ),
+            ),
             const SizedBox(height: 16),
             Text(
               'Crypto Shift プレミアム',
@@ -48,13 +56,13 @@ class PremiumPaywallScreen extends StatelessWidget {
             const SizedBox(height: 48),
 
             // Feature List
-            _buildFeatureRow(Icons.chat_bubble_outline, 'AIチャットボット使い放題', '過去の膨大な記事データに基づき、あらゆる疑問にアナリストが即答します。', textColor, subtitleColor),
+            _buildFeatureRow('AIチャット利用回数が大幅アップ', '専属のAIアナリストに、相場の疑問や専門用語をたっぷり質問できます。（1日30回まで）', textColor, subtitleColor),
             const SizedBox(height: 24),
-            _buildFeatureRow(Icons.notifications_active_outlined, 'キーワード指定のカスタム通知', '「ETF」「税金」など、気になるキーワードのニュースが出た時だけ通知を受け取れます。', textColor, subtitleColor),
+            _buildFeatureRow('すべての限定記事・レポートが読み放題', 'プロの分析によるウィークリーレポートや、プレミアム限定の深掘り記事がすべて閲覧可能に。', textColor, subtitleColor),
             const SizedBox(height: 24),
-            _buildFeatureRow(Icons.summarize_outlined, '週末のAI週間レポート配信', '多忙なあなたに代わり、1週間の重要な金融・仮想通貨ニュースをAIがまとめてお届けします。', textColor, subtitleColor),
+            _buildFeatureRow('お好み通知の自由なカスタマイズ', '欲しいニュースのカテゴリや通知の頻度（リアルタイム・1日1回）を自由に設定できます。', textColor, subtitleColor),
             const SizedBox(height: 24),
-            _buildFeatureRow(Icons.block, '広告の完全非表示', '一切の広告を排除し、最高に快適な情報収集体験を提供します。', textColor, subtitleColor),
+            _buildFeatureRow('広告の完全非表示', '一切の広告を排除し、最高に快適な情報収集体験を提供します。', textColor, subtitleColor),
 
             const SizedBox(height: 48),
 
@@ -64,7 +72,7 @@ class PremiumPaywallScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF161B22) : Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF00D2FF).withOpacity(0.5), width: 2),
+                border: Border.all(color: const Color(0xFF555555).withOpacity(0.5), width: 2),
               ),
               child: Column(
                 children: [
@@ -99,7 +107,7 @@ class PremiumPaywallScreen extends StatelessWidget {
                 Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00D2FF),
+                backgroundColor: const Color(0xFF555555),
                 foregroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -131,12 +139,10 @@ class PremiumPaywallScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureRow(IconData icon, String title, String description, Color textColor, Color subtitleColor) {
+  Widget _buildFeatureRow(String title, String description, Color textColor, Color subtitleColor) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: const Color(0xFF00D2FF), size: 28),
-        const SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

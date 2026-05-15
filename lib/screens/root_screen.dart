@@ -39,9 +39,14 @@ class _RootScreenState extends State<RootScreen> {
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
-          onTap: (index) => setState(() => _currentIndex = index),
+          onTap: (index) {
+            FocusManager.instance.primaryFocus?.unfocus();
+            setState(() {
+              _currentIndex = index;
+            });
+          },
           backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-          selectedItemColor: isDark ? const Color(0xFF00D2FF) : const Color(0xFF007AFF),
+          selectedItemColor: isDark ? const Color(0xFF555555) : const Color(0xFF555555),
           unselectedItemColor: isDark ? Colors.white.withOpacity(0.4) : Colors.black45,
           type: BottomNavigationBarType.fixed,
           elevation: 0,

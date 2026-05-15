@@ -172,7 +172,7 @@ class AboutScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('✓ ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF00D2FF))),
+          Text('✓ ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF555555))),
           Expanded(child: Text(text, style: TextStyle(fontSize: 14, height: 1.5, color: color.withOpacity(0.9)))),
         ],
       ),

@@ -85,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_isLoadingCategories) {
       return Scaffold(
         backgroundColor: scaffoldBg,
-        body: const Center(child: CircularProgressIndicator(color: Color(0xFF00D2FF))),
+        body: const Center(child: CircularProgressIndicator(color: const Color(0xFF555555))),
       );
     }
 
@@ -115,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF00D2FF).withOpacity(0.9),
+                    color: const Color(0xFF555555).withOpacity(0.9),
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
                   ),
@@ -129,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Container(
                 decoration: isHovered
                     ? const BoxDecoration(
-                        border: Border(bottom: BorderSide(color: Color(0xFF00D2FF), width: 3)),
+                        border: Border(bottom: BorderSide(color: const Color(0xFF555555), width: 3)),
                       )
                     : null,
                 child: Tab(
@@ -139,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(name),
                       if (c['id'] == 51 && !context.watch<AppState>().isPremium) ...[
                         const SizedBox(width: 4),
-                        const Icon(Icons.lock, size: 14, color: Colors.amber),
+                        Icon(Icons.lock, size: 14, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
                       ],
                     ],
                   ),
@@ -242,8 +242,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
           bottom: TabBar(
             isScrollable: true,
-            indicatorColor: const Color(0xFF00D2FF),
-            labelColor: const Color(0xFF00D2FF),
+            indicatorColor: const Color(0xFF555555),
+            labelColor: const Color(0xFF555555),
             unselectedLabelColor: Colors.grey,
             tabs: tabs,
           ),
@@ -502,7 +502,7 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
               label: const Text('再試行'),
               onPressed: () => _loadArticles(refresh: true),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00D2FF),
+                backgroundColor: const Color(0xFF555555),
                 foregroundColor: Colors.black,
               ),
             ),
@@ -518,7 +518,7 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
     }
 
     return RefreshIndicator(
-      color: const Color(0xFF00D2FF),
+      color: const Color(0xFF555555),
       backgroundColor: const Color(0xFF0D1117),
       onRefresh: () => _loadArticles(refresh: true),
       child: ListView.builder(
@@ -529,7 +529,7 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
           if (index == _articles.length) {
             return const Padding(
               padding: EdgeInsets.all(24),
-              child: Center(child: CircularProgressIndicator(color: Color(0xFF00D2FF))),
+              child: Center(child: CircularProgressIndicator(color: const Color(0xFF555555))),
             );
           }
           return _buildArticleCard(_articles[index], index == 0, context);
@@ -681,7 +681,7 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
                             icon: Icon(
                               isSaved ? Icons.bookmark : Icons.bookmark_border,
                               size: 20,
-                              color: isSaved ? const Color(0xFF00D2FF) : (isDark ? Colors.white54 : Colors.black54),
+                              color: isSaved ? const Color(0xFF555555) : (isDark ? Colors.white54 : Colors.black54),
                             ),
                             onPressed: () => context.read<AppState>().toggleSave(article),
                             padding: EdgeInsets.zero,
@@ -709,7 +709,7 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
                         height: 90,
                         width: 90,
                         color: const Color(0xFF0D1117),
-                        child: const Center(child: CircularProgressIndicator(color: Color(0xFF00D2FF), strokeWidth: 2)),
+                        child: const Center(child: CircularProgressIndicator(color: const Color(0xFF555555), strokeWidth: 2)),
                       ),
                       errorWidget: (context, url, error) => Container(
                         height: 90,
@@ -750,7 +750,7 @@ class _PremiumLockPlaceholder extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.lock_outline, size: 64, color: Colors.amber),
+          Icon(Icons.lock_outline, size: 64, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
           const SizedBox(height: 24),
           const Text(
             'ウィークリーレポート',
@@ -771,7 +771,7 @@ class _PremiumLockPlaceholder extends StatelessWidget {
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00D2FF),
+              backgroundColor: const Color(0xFF555555),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
