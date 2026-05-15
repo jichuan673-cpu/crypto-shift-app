@@ -218,6 +218,30 @@ class ArticleDetailScreen extends StatelessWidget {
                 border: Border.all(color: dividerColor),
                 fontFamily: 'Noto Serif JP, serif',
               ),
+              'table': Style(
+                border: Border.all(color: dividerColor, width: 1),
+                margin: Margins.only(bottom: 20),
+              ),
+              'thead': Style(
+                backgroundColor: isDark ? const Color(0xFF1E2530) : const Color(0xFFEAEDF0),
+              ),
+              'th': Style(
+                color: headingColor,
+                fontWeight: FontWeight.bold,
+                fontSize: FontSize(14 * scale),
+                padding: HtmlPaddings.symmetric(horizontal: 12, vertical: 10),
+                border: Border.all(color: dividerColor, width: 1),
+                backgroundColor: isDark ? const Color(0xFF1E2530) : const Color(0xFFEAEDF0),
+              ),
+              'td': Style(
+                color: textColor,
+                fontSize: FontSize(14 * scale),
+                padding: HtmlPaddings.symmetric(horizontal: 12, vertical: 10),
+                border: Border.all(color: dividerColor, width: 1),
+              ),
+              'tr': Style(
+                border: Border(bottom: BorderSide(color: dividerColor, width: 1)),
+              ),
             },
             onLinkTap: (url, _, __) async {
               if (url != null) {
