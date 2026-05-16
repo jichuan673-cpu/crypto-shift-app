@@ -10,6 +10,26 @@ import '../providers/app_state.dart';
 import 'premium_paywall_screen.dart';
 import 'package:intl/intl.dart';
 
+/// 表を横スクロール可能にする拡張
+class _ScrollableTableExtension extends TableHtmlExtension {
+  @override
+  InlineSpan build(ExtensionContext context) {
+    final span = super.build(context);
+    if (span is WidgetSpan) {
+      return WidgetSpan(
+        alignment: span.alignment,
+        baseline: span.baseline,
+        style: span.style,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: span.child,
+        ),
+      );
+    }
+    return span;
+  }
+}
+
 class ArticleDetailScreen extends StatelessWidget {
   final Article article;
 
@@ -245,7 +265,7 @@ class ArticleDetailScreen extends StatelessWidget {
               ),
             },
             extensions: [
-              TableHtmlExtension(),
+              _ScrollableTableExtension(),
             ],
             onLinkTap: (url, _, __) async {
               if (url != null) {

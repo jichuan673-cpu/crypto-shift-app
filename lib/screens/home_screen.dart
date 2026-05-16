@@ -38,20 +38,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _loadCategories();
   }
 
+  // デフォルトのカテゴリ表示順（新規インストール時）
+  static const _defaultCategoryOrder = [
+    '仮想通貨',
+    '不動産',
+    'エネルギー資源',
+    '政治/経済',
+    'ウィークリーレポート',
+    '企業分析',
+    '特集',
+  ];
+
   Future<void> _loadCategories() async {
     final savedOrder = context.read<AppState>().categoryOrder;
     final cats = await WordPressApi.getCategories();
 
-    if (savedOrder.isNotEmpty) {
-      cats.sort((a, b) {
-        final aIndex = savedOrder.indexOf(a['name'] as String);
-        final bIndex = savedOrder.indexOf(b['name'] as String);
-        if (aIndex == -1 && bIndex == -1) return 0;
-        if (aIndex == -1) return 1;
-        if (bIndex == -1) return -1;
-        return aIndex.compareTo(bIndex);
-      });
-    }
+    // 保存済み順があればそれを使用、なければデフォルト順を適用
+    final order = savedOrder.isNotEmpty ? savedOrder : _defaultCategoryOrder;
+    cats.sort((a, b) {
+      final aIndex = order.indexOf(a['name'] as String);
+      final bIndex = order.indexOf(b['name'] as String);
+      if (aIndex == -1 && bIndex == -1) return 0;
+      if (aIndex == -1) return 1;
+      if (bIndex == -1) return -1;
+      return aIndex.compareTo(bIndex);
+    });
 
     if (mounted) {
       final filtered = cats.where((c) => (c['name'] as String).toLowerCase() != 'premium').toList();
@@ -84,6 +95,129 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  void _showCategoryReorderSheet(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // 現在の順番をコピーして編集用に使う
+    final editableCategories = List<Map<String, dynamic>>.from(_categories);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.65,
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF161B22) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Column(
+                children: [
+                  // ハンドルバー
+                  Container(
+                    margin: const EdgeInsets.only(top: 12, bottom: 4),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white24 : Colors.black12,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    child: Row(
+                      children: [
+                        Text('カテゴリの並び替え',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.black87,
+                            )),
+                        const Spacer(),
+                        TextButton(
+                          onPressed: () {
+                            // 並び順を保存して閉じる
+                            setState(() {
+                              _categories = editableCategories;
+                            });
+                            final newController = TabController(
+                              length: _categories.length + 1,
+                              vsync: this,
+                            );
+                            _tabController?.dispose();
+                            setState(() => _tabController = newController);
+                            context.read<AppState>().updateCategoryOrder(
+                                _categories.map((c) => c['name'] as String).toList());
+                            Navigator.pop(context);
+                          },
+                          child: const Text('完了',
+                              style: TextStyle(
+                                  color: Color(0xFF555555),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Divider(height: 1, color: isDark ? Colors.white12 : Colors.black12),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 20, top: 10, bottom: 4),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('ドラッグして順番を変更できます',
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? Colors.white38 : Colors.black38)),
+                    ),
+                  ),
+                  Expanded(
+                    child: ReorderableListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      itemCount: editableCategories.length,
+                      onReorder: (oldIndex, newIndex) {
+                        setSheetState(() {
+                          if (newIndex > oldIndex) newIndex--;
+                          final item = editableCategories.removeAt(oldIndex);
+                          editableCategories.insert(newIndex, item);
+                        });
+                      },
+                      itemBuilder: (context, index) {
+                        final cat = editableCategories[index];
+                        final name = cat['name'] as String;
+                        return ListTile(
+                          key: ValueKey(cat['id']),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          leading: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF555555).withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.label_outline,
+                                size: 18, color: Color(0xFF555555)),
+                          ),
+                          title: Text(name,
+                              style: TextStyle(
+                                  color: isDark ? Colors.white : Colors.black87,
+                                  fontWeight: FontWeight.w500)),
+                          trailing: Icon(Icons.drag_handle,
+                              color: isDark ? Colors.white38 : Colors.black38),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   // Ticker and chart modal removed in favor of marquee
 
   @override
@@ -100,63 +234,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     final tabs = <Widget>[
       const Tab(text: 'すべて'),
-      ..._categories.asMap().entries.map((e) {
-        final int index = e.key;
-        final c = e.value;
+      ..._categories.map((c) {
         final name = c['name'] as String;
-        
-        return DragTarget<int>(
-          onWillAcceptWithDetails: (details) => details.data != index,
-          onAcceptWithDetails: (details) {
-            final fromIndex = details.data;
-            setState(() {
-              final item = _categories.removeAt(fromIndex);
-              _categories.insert(index, item);
-            });
-            context.read<AppState>().updateCategoryOrder(_categories.map((cat) => cat['name'] as String).toList());
-            _tabController?.animateTo(0);
-          },
-          builder: (context, candidateData, rejectedData) {
-            final isHovered = candidateData.isNotEmpty;
-            return LongPressDraggable<int>(
-              data: index,
-              feedback: Material(
-                color: Colors.transparent,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF555555).withOpacity(0.9),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
-                  ),
-                  child: Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                ),
-              ),
-              childWhenDragging: Opacity(
-                opacity: 0.3,
-                child: Tab(text: name),
-              ),
-              child: Container(
-                decoration: isHovered
-                    ? const BoxDecoration(
-                        border: Border(bottom: BorderSide(color: const Color(0xFF555555), width: 3)),
-                      )
-                    : null,
-                child: Tab(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(name),
-                      if (c['id'] == 51 && !context.watch<AppState>().isPremium) ...[
-                        const SizedBox(width: 4),
-                        Icon(Icons.lock, size: 14, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
+        return Tab(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(name),
+              if (c['id'] == 51 && !context.watch<AppState>().isPremium) ...[
+                const SizedBox(width: 4),
+                Icon(Icons.lock, size: 14,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black),
+              ],
+            ],
+          ),
         );
       }),
     ];
@@ -246,11 +339,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 )
               : null,
           actions: [
-            if (!_isSearching)
+            if (!_isSearching) ...[
               IconButton(
                 icon: Icon(Icons.search, color: Theme.of(context).appBarTheme.foregroundColor),
                 onPressed: () => setState(() => _isSearching = true),
               ),
+              IconButton(
+                icon: Icon(Icons.tune, color: Theme.of(context).appBarTheme.foregroundColor),
+                tooltip: 'カテゴリを並び替え',
+                onPressed: () => _showCategoryReorderSheet(context),
+              ),
+            ],
             if (_isSearching)
               IconButton(
                 icon: Icon(Icons.clear, color: Theme.of(context).appBarTheme.foregroundColor),
@@ -461,10 +560,8 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
     });
 
     try {
-      final fetcher = widget.isPremium
-          ? WordPressApi.getPremiumPosts
-          : WordPressApi.getPosts;
-      final posts = await fetcher(
+      // 全ユーザーがprivate記事を含む一覧を取得（コンテンツ制限はアプリ詳細画面で制御）
+      final posts = await WordPressApi.getPremiumPosts(
         page: _currentPage,
         perPage: 10,
         categoryId: widget.categoryIds == null ? widget.categoryId : null,
@@ -493,10 +590,8 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
     setState(() => _isLoadingMore = true);
     _currentPage++;
     try {
-      final fetcher = widget.isPremium
-          ? WordPressApi.getPremiumPosts
-          : WordPressApi.getPosts;
-      final posts = await fetcher(
+      // 全ユーザーがprivate記事を含む一覧を取得（コンテンツ制限はアプリ詳細画面で制御）
+      final posts = await WordPressApi.getPremiumPosts(
         page: _currentPage,
         perPage: 10,
         categoryId: widget.categoryIds == null ? widget.categoryId : null,
