@@ -164,12 +164,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     // Build TabViews - Intercept Weekly Report (ID 51) for non-premium users
     final isPremium = context.watch<AppState>().isPremium;
     final tabViews = <Widget>[
-      _ArticleList(categoryId: null, categoryName: 'すべて', searchQuery: _searchQuery),
+      _ArticleList(
+        key: const ValueKey('all'),
+        categoryId: null,
+        categoryName: 'すべて',
+        searchQuery: _searchQuery,
+      ),
       ..._categories.map<Widget>((c) {
         final categoryId = c['id'] as int;
-        if (categoryId == 51 && !isPremium) {
-          return const _PremiumLockPlaceholder();
-        }
         // 子カテゴリのIDもまとめて渡す（子カテゴリの記事も表示するため）
         final childIds = _categories
             .where((child) => child['parent'] == categoryId)
@@ -177,6 +179,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             .toList();
         final allIds = [categoryId, ...childIds];
         return _ArticleList(
+          key: ValueKey(categoryId),
           categoryId: categoryId,
           categoryIds: allIds.length > 1 ? allIds : null,
           categoryName: c['name'] as String,
@@ -262,6 +265,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             labelColor: const Color(0xFF555555),
             unselectedLabelColor: Colors.grey,
             tabs: tabs,
+            onTap: (index) {
+              _tabController?.animateTo(index);
+            },
           ),
         ),
         body: Column(
@@ -321,6 +327,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             Expanded(
               child: TabBarView(
                 controller: _tabController,
+                physics: const PageScrollPhysics(),
                 children: tabViews,
               ),
             ),
@@ -383,6 +390,7 @@ class _ArticleList extends StatefulWidget {
   final String? searchQuery;
 
   const _ArticleList({
+    super.key,
     required this.categoryId,
     this.categoryIds,
     required this.categoryName,
@@ -415,7 +423,8 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
   @override
   void didUpdateWidget(covariant _ArticleList oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.searchQuery != widget.searchQuery) {
+    if (oldWidget.searchQuery != widget.searchQuery ||
+        oldWidget.categoryId != widget.categoryId) {
       _loadArticles(refresh: true);
     }
   }
@@ -639,6 +648,9 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
         final dateStr = _formatDate(article.date);
         final isSaved = context.select<AppState, bool>((state) => state.isSaved(article.id));
         final isRead = context.select<AppState, bool>((state) => state.isRead(article.id));
+        final isPremium = context.select<AppState, bool>((state) => state.isPremium);
+        final isPremiumArticle = article.categories.contains(51) || article.categories.contains(52);
+        final isLocked = isPremiumArticle && !isPremium;
 
     return GestureDetector(
       onTap: () {
@@ -668,6 +680,24 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
                   'Crypto Shift',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: textColor),
                 ),
+                if (isLocked) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF555555),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.lock, size: 10, color: Colors.white),
+                        SizedBox(width: 3),
+                        Text('プレミアム', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: 10),
@@ -717,26 +747,36 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
                   const SizedBox(width: 12),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: CachedNetworkImage(
-                      imageUrl: article.thumbnailUrl!,
-                      height: 90,
-                      width: 90,
-                      fit: BoxFit.cover,
-                      color: isRead ? Colors.black.withOpacity(0.5) : null,
-                      colorBlendMode: isRead ? BlendMode.darken : null,
-                      memCacheWidth: 250, // Optimize image memory for thumbnail
-                      placeholder: (context, url) => Container(
-                        height: 90,
-                        width: 90,
-                        color: const Color(0xFF0D1117),
-                        child: const Center(child: CircularProgressIndicator(color: const Color(0xFF555555), strokeWidth: 2)),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        height: 90,
-                        width: 90,
-                        color: const Color(0xFF0D1117),
-                        child: const Icon(Icons.image_not_supported, color: Colors.white24, size: 24),
-                      ),
+                    child: Stack(
+                      children: [
+                        CachedNetworkImage(
+                          imageUrl: article.thumbnailUrl!,
+                          height: 90,
+                          width: 90,
+                          fit: BoxFit.cover,
+                          color: (isRead || isLocked) ? Colors.black.withOpacity(0.5) : null,
+                          colorBlendMode: (isRead || isLocked) ? BlendMode.darken : null,
+                          memCacheWidth: 250,
+                          placeholder: (context, url) => Container(
+                            height: 90,
+                            width: 90,
+                            color: const Color(0xFF0D1117),
+                            child: const Center(child: CircularProgressIndicator(color: const Color(0xFF555555), strokeWidth: 2)),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            height: 90,
+                            width: 90,
+                            color: const Color(0xFF0D1117),
+                            child: const Icon(Icons.image_not_supported, color: Colors.white24, size: 24),
+                          ),
+                        ),
+                        if (isLocked)
+                          const Positioned.fill(
+                            child: Center(
+                              child: Icon(Icons.lock, color: Colors.white, size: 24),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ],
@@ -761,7 +801,7 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
 }
 
 class _PremiumLockPlaceholder extends StatelessWidget {
-  const _PremiumLockPlaceholder();
+  const _PremiumLockPlaceholder({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep -l \"flutter_html\\\\|Html\\(\\\\|htmlContent\\\\|webview\\\\|WebView\")",
+      "PowerShell(Get-Command flutter -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-ChildItem \"C:\\\\flutter\\\\bin\\\\flutter.bat\" -ErrorAction SilentlyContinue; Get-ChildItem \"$env:LOCALAPPDATA\\\\flutter\\\\bin\\\\flutter.bat\" -ErrorAction SilentlyContinue; Get-ChildItem \"C:\\\\src\\\\flutter\\\\bin\\\\flutter.bat\" -ErrorAction SilentlyContinue)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git config *)",
+      "Bash(git push *)",
+      "Bash(gh pr create --title 'feat: v1.1.0+43 - テーブル表示・通知時間指定・ロゴ差替え・カテゴリ修正' --body ' *)",
+      "Bash(C:\\\\flutter\\\\bin\\\\flutter.bat pub *)",
+      "Bash(\"/c/flutter/bin/flutter\" pub *)",
+      "Bash(\"/c/flutter/bin/flutter\" build *)",
+      "Bash(ls \"C:/Users/$USER/.pub-cache/hosted/pub.dev/\" 2>/dev/null | grep flutter_local || ls /c/Users/*/AppData/Local/Pub/Cache/hosted/pub.dev/ 2>/dev/null | grep flutter_local || find /c/Users -name \"flutter_local_notifications*\" -maxdepth 8 -type d 2>/dev/null | head -5)",
+      "Bash(xargs grep -l \"offline\\\\|proxy\\\\|ssl\")"
+    ]
+  }
+}
