@@ -9,11 +9,18 @@ import 'package:google_fonts/google_fonts.dart';
 import 'providers/app_state.dart';
 import 'screens/root_screen.dart';
 import 'services/revenuecat_service.dart';
+import 'services/notification_service.dart';
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  // バックグラウンドではFCMが自動で通知を表示するため追加処理不要
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Firebase Initialize (Requires user to setup google-services.json)
+
+  // Firebase Initialize
   try {
     await Firebase.initializeApp();
     FirebaseMessaging messaging = FirebaseMessaging.instance;
@@ -22,8 +29,16 @@ void main() async {
       badge: true,
       sound: true,
     );
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   } catch (e) {
     debugPrint('Firebase initialization passed (requires config): $e');
+  }
+
+  // LocalNotifications Initialize
+  try {
+    await NotificationService.initialize();
+  } catch (e) {
+    debugPrint('NotificationService initialization error: $e');
   }
 
   // RevenueCat Initialize
@@ -95,9 +110,34 @@ class CryptoShiftApp extends StatelessWidget {
               elevation: 0,
             ),
           ),
-          home: const RootScreen(),
+          home: FcmListenerWidget(child: const RootScreen()),
         );
       },
     );
   }
+}
+
+/// FCMフォアグラウンド通知を処理するウィジェット
+class FcmListenerWidget extends StatefulWidget {
+  final Widget child;
+  const FcmListenerWidget({super.key, required this.child});
+  @override
+  State<FcmListenerWidget> createState() => _FcmListenerWidgetState();
+}
+
+class _FcmListenerWidgetState extends State<FcmListenerWidget> {
+  @override
+  void initState() {
+    super.initState();
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      final appState = context.read<AppState>();
+      if (!appState.notificationsEnabled) return;
+      final title = message.notification?.title ?? '新着記事';
+      final body = message.notification?.body ?? 'Crypto Shiftに新しい記事が届きました';
+      NotificationService.showForegroundNotification(title: title, body: body);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
