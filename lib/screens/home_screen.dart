@@ -169,6 +169,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         categoryId: null,
         categoryName: 'すべて',
         searchQuery: _searchQuery,
+        isPremium: isPremium,
       ),
       ..._categories.map<Widget>((c) {
         final categoryId = c['id'] as int;
@@ -184,6 +185,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           categoryIds: allIds.length > 1 ? allIds : null,
           categoryName: c['name'] as String,
           searchQuery: _searchQuery,
+          isPremium: isPremium,
         );
       }),
     ];
@@ -388,6 +390,7 @@ class _ArticleList extends StatefulWidget {
   final List<int>? categoryIds;
   final String categoryName;
   final String? searchQuery;
+  final bool isPremium;
 
   const _ArticleList({
     super.key,
@@ -395,6 +398,7 @@ class _ArticleList extends StatefulWidget {
     this.categoryIds,
     required this.categoryName,
     this.searchQuery,
+    this.isPremium = false,
   });
 
   @override
@@ -457,7 +461,10 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
     });
 
     try {
-      final posts = await WordPressApi.getPosts(
+      final fetcher = widget.isPremium
+          ? WordPressApi.getPremiumPosts
+          : WordPressApi.getPosts;
+      final posts = await fetcher(
         page: _currentPage,
         perPage: 10,
         categoryId: widget.categoryIds == null ? widget.categoryId : null,
@@ -486,7 +493,10 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
     setState(() => _isLoadingMore = true);
     _currentPage++;
     try {
-      final posts = await WordPressApi.getPosts(
+      final fetcher = widget.isPremium
+          ? WordPressApi.getPremiumPosts
+          : WordPressApi.getPosts;
+      final posts = await fetcher(
         page: _currentPage,
         perPage: 10,
         categoryId: widget.categoryIds == null ? widget.categoryId : null,
