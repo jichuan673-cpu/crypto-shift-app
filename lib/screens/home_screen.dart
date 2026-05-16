@@ -21,13 +21,14 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _categories = [];
   bool _isLoadingCategories = true;
   bool _isSearching = false;
   String _searchQuery = '';
-  
+  TabController? _tabController;
+
   late final MarketDataApi _marketDataApi;
 
   @override
@@ -40,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadCategories() async {
     final savedOrder = context.read<AppState>().categoryOrder;
     final cats = await WordPressApi.getCategories();
-    
+
     if (savedOrder.isNotEmpty) {
       cats.sort((a, b) {
         final aIndex = savedOrder.indexOf(a['name'] as String);
@@ -53,8 +54,15 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     if (mounted) {
+      final filtered = cats.where((c) => (c['name'] as String).toLowerCase() != 'premium').toList();
+      final newController = TabController(
+        length: filtered.length + 1, // +1 for 'すべて'
+        vsync: this,
+      );
+      _tabController?.dispose();
       setState(() {
-        _categories = cats.where((c) => (c['name'] as String).toLowerCase() != 'premium').toList();
+        _categories = filtered;
+        _tabController = newController;
         _isLoadingCategories = false;
       });
     }
@@ -70,6 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _tabController?.dispose();
     _searchController.dispose();
     _marketDataApi.dispose();
     super.dispose();
@@ -105,6 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
               _categories.insert(index, item);
             });
             context.read<AppState>().updateCategoryOrder(_categories.map((cat) => cat['name'] as String).toList());
+            _tabController?.animateTo(0);
           },
           builder: (context, candidateData, rejectedData) {
             final isHovered = candidateData.isNotEmpty;
@@ -175,9 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }),
     ];
 
-    return DefaultTabController(
-      length: tabs.length,
-      child: Scaffold(
+    return Scaffold(
         backgroundColor: scaffoldBg,
         appBar: AppBar(
           backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
@@ -248,6 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
           ],
           bottom: TabBar(
+            controller: _tabController,
             isScrollable: true,
             indicatorColor: const Color(0xFF555555),
             labelColor: const Color(0xFF555555),
@@ -311,13 +320,13 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Expanded(
               child: TabBarView(
+                controller: _tabController,
                 children: tabViews,
               ),
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }
 

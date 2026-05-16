@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_html_table/flutter_html_table.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
@@ -243,6 +244,9 @@ class ArticleDetailScreen extends StatelessWidget {
                 border: Border(bottom: BorderSide(color: dividerColor, width: 1)),
               ),
             },
+            extensions: [
+              TableHtmlExtension(),
+            ],
             onLinkTap: (url, _, __) async {
               if (url != null) {
                 final uri = Uri.parse(url);

@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import '../models/article.dart';
+import '../services/notification_service.dart';
 
 class AppState extends ChangeNotifier {
   bool _isDarkMode = false;
@@ -76,7 +77,12 @@ class AppState extends ChangeNotifier {
     
     // アプリ起動時にFCMトピックを同期
     _syncFcmTopics();
-    
+    NotificationService.syncSchedule(
+      enabled: _notificationsEnabled,
+      frequency: _notificationFrequency,
+      scheduledTime: _notificationScheduledTime,
+    );
+
     final cachedDataStr = prefs.getString('cachedArticlesData');
     if (cachedDataStr != null) {
       try {
@@ -168,6 +174,11 @@ class AppState extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('notificationsEnabled', enabled);
     _syncFcmTopics();
+    NotificationService.syncSchedule(
+      enabled: enabled,
+      frequency: _notificationFrequency,
+      scheduledTime: _notificationScheduledTime,
+    );
   }
 
   Future<void> setNotificationFrequency(String frequency) async {
@@ -176,6 +187,11 @@ class AppState extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('notificationFrequency', frequency);
     _syncFcmTopics();
+    NotificationService.syncSchedule(
+      enabled: _notificationsEnabled,
+      frequency: frequency,
+      scheduledTime: _notificationScheduledTime,
+    );
   }
 
   Future<void> setNotificationScheduledTime(String time) async {
@@ -184,6 +200,11 @@ class AppState extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('notificationScheduledTime', time);
     _syncFcmTopics();
+    NotificationService.syncSchedule(
+      enabled: _notificationsEnabled,
+      frequency: _notificationFrequency,
+      scheduledTime: time,
+    );
   }
 
   Future<void> toggleSubscribedCategory(int categoryId) async {
