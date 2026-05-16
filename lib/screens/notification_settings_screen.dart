@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
 import '../services/wordpress_api.dart';
+import 'premium_paywall_screen.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
@@ -92,6 +93,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
             _buildCard(
               cardColor,
               children: [
+                // リアルタイム（全員利用可能）
                 RadioListTile<String>(
                   title: Text('リアルタイム', style: TextStyle(color: textColor)),
                   subtitle: Text('記事が追加されるたびに通知します', style: TextStyle(color: subtitleColor, fontSize: 12)),
@@ -103,47 +105,92 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                   },
                 ),
                 const Divider(height: 1),
-                RadioListTile<String>(
-                  title: Text('時間指定', style: TextStyle(color: textColor)),
-                  subtitle: Text('指定した時間に新着記事をまとめて通知します', style: TextStyle(color: subtitleColor, fontSize: 12)),
-                  value: 'scheduled',
-                  groupValue: appState.notificationFrequency,
-                  activeColor: const Color(0xFF555555),
-                  onChanged: (val) {
-                    if (val != null) appState.setNotificationFrequency(val);
-                  },
-                ),
-                if (appState.notificationFrequency == 'scheduled') ...[
-                  const Divider(height: 1),
+                // 時間指定（プレミアム限定）
+                if (appState.isPremium) ...[
+                  RadioListTile<String>(
+                    title: Text('時間指定', style: TextStyle(color: textColor)),
+                    subtitle: Text('指定した時間に新着記事をまとめて通知します', style: TextStyle(color: subtitleColor, fontSize: 12)),
+                    value: 'scheduled',
+                    groupValue: appState.notificationFrequency,
+                    activeColor: const Color(0xFF555555),
+                    onChanged: (val) {
+                      if (val != null) appState.setNotificationFrequency(val);
+                    },
+                  ),
+                  if (appState.notificationFrequency == 'scheduled') ...[
+                    const Divider(height: 1),
+                    InkWell(
+                      onTap: () => _pickScheduledTime(context, appState),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        child: Row(
+                          children: [
+                            Icon(Icons.access_time, size: 20, color: const Color(0xFF555555)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('配信時間', style: TextStyle(color: textColor, fontWeight: FontWeight.w500)),
+                                  const SizedBox(height: 2),
+                                  Text('タップして時間を変更', style: TextStyle(color: subtitleColor, fontSize: 12)),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              appState.notificationScheduledTime,
+                              style: TextStyle(
+                                color: const Color(0xFF555555),
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                fontFeatures: const [FontFeature.tabularFigures()],
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(Icons.chevron_right, size: 20, color: subtitleColor),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ] else ...[
+                  // 非プレミアム：時間指定はロック表示
                   InkWell(
-                    onTap: () => _pickScheduledTime(context, appState),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PremiumPaywallScreen())),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       child: Row(
                         children: [
-                          Icon(Icons.access_time, size: 20, color: const Color(0xFF555555)),
-                          const SizedBox(width: 12),
+                          Radio<String>(
+                            value: 'scheduled',
+                            groupValue: null,
+                            onChanged: null,
+                            activeColor: Colors.grey,
+                          ),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('配信時間', style: TextStyle(color: textColor, fontWeight: FontWeight.w500)),
+                                Row(
+                                  children: [
+                                    Text('時間指定', style: TextStyle(color: subtitleColor)),
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF555555),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: const Text('プレミアム', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                    ),
+                                  ],
+                                ),
                                 const SizedBox(height: 2),
-                                Text('タップして時間を変更', style: TextStyle(color: subtitleColor, fontSize: 12)),
+                                Text('指定した時間に新着記事をまとめて通知します', style: TextStyle(color: subtitleColor, fontSize: 12)),
                               ],
                             ),
                           ),
-                          Text(
-                            appState.notificationScheduledTime,
-                            style: TextStyle(
-                              color: const Color(0xFF555555),
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              fontFeatures: const [FontFeature.tabularFigures()],
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(Icons.chevron_right, size: 20, color: subtitleColor),
+                          Icon(Icons.lock, size: 16, color: subtitleColor),
                         ],
                       ),
                     ),
@@ -153,42 +200,102 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
             ),
 
             const SizedBox(height: 24),
-            _buildSectionTitle('受信するカテゴリの選択', textColor),
-            Padding(
-              padding: const EdgeInsets.only(left: 8, bottom: 8),
-              child: Text(
-                '※ すべてオフの場合はすべてのカテゴリの通知が届きます',
-                style: TextStyle(color: subtitleColor, fontSize: 12),
-              ),
-            ),
-            if (_isLoading)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32.0),
-                  child: CircularProgressIndicator(color: const Color(0xFF555555)),
-                ),
-              )
-            else
-              _buildCard(
-                cardColor,
-                children: _categories.map((cat) {
-                  final catId = cat['id'] as int;
-                  final isSelected = appState.subscribedCategoryIds.contains(catId);
-                  return Column(
-                    children: [
-                      CheckboxListTile(
-                        title: Text(cat['name'] as String, style: TextStyle(color: textColor)),
-                        activeColor: const Color(0xFF555555),
-                        value: isSelected,
-                        onChanged: (val) {
-                          appState.toggleSubscribedCategory(catId);
-                        },
+            // カテゴリ選択セクション（タイトル）
+            Row(
+              children: [
+                Expanded(child: _buildSectionTitle('受信するカテゴリの選択', textColor)),
+                if (!appState.isPremium)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF555555),
+                        borderRadius: BorderRadius.circular(4),
                       ),
-                      if (cat != _categories.last) const Divider(height: 1),
-                    ],
-                  );
-                }).toList(),
+                      child: const Text('プレミアム', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+              ],
+            ),
+            if (appState.isPremium) ...[
+              Padding(
+                padding: const EdgeInsets.only(left: 8, bottom: 8),
+                child: Text(
+                  '※ すべてオフの場合はすべてのカテゴリの通知が届きます',
+                  style: TextStyle(color: subtitleColor, fontSize: 12),
+                ),
               ),
+              if (_isLoading)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: CircularProgressIndicator(color: const Color(0xFF555555)),
+                  ),
+                )
+              else
+                _buildCard(
+                  cardColor,
+                  children: _categories.map((cat) {
+                    final catId = cat['id'] as int;
+                    final isSelected = appState.subscribedCategoryIds.contains(catId);
+                    return Column(
+                      children: [
+                        CheckboxListTile(
+                          title: Text(cat['name'] as String, style: TextStyle(color: textColor)),
+                          activeColor: const Color(0xFF555555),
+                          value: isSelected,
+                          onChanged: (val) {
+                            appState.toggleSubscribedCategory(catId);
+                          },
+                        ),
+                        if (cat != _categories.last) const Divider(height: 1),
+                      ],
+                    );
+                  }).toList(),
+                ),
+            ] else ...[
+              // 非プレミアム：カテゴリ選択はロックカード
+              GestureDetector(
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PremiumPaywallScreen())),
+                child: _buildCard(
+                  cardColor,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          Icon(Icons.lock_outline, size: 32, color: subtitleColor),
+                          const SizedBox(height: 12),
+                          Text(
+                            'カテゴリ指定はプレミアム限定機能です',
+                            style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '受け取りたいカテゴリを個別に設定できます',
+                            style: TextStyle(color: subtitleColor, fontSize: 12),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          TextButton(
+                            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PremiumPaywallScreen())),
+                            style: TextButton.styleFrom(
+                              backgroundColor: const Color(0xFF555555),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            ),
+                            child: const Text('プレミアムプランを見る', style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
           
           const SizedBox(height: 48),

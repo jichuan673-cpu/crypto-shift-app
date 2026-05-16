@@ -140,8 +140,8 @@ class ArticleDetailScreen extends StatelessWidget {
     final dividerColor = isDark ? Colors.white24 : Colors.black12;
     final codeBgColor = isDark ? const Color(0xFF161B22) : const Color(0xFFF0F2F5);
 
-    // Check for premium restriction (Category ID 52)
-    final bool isRestricted = article.categories.contains(52) && !isPremium;
+    // Check for premium restriction (Category ID 51 or 52)
+    final bool isRestricted = (article.categories.contains(51) || article.categories.contains(52)) && !isPremium;
     final displayContent = isRestricted ? article.excerpt : article.content;
 
     return Padding(
