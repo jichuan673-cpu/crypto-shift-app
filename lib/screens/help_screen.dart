@@ -28,7 +28,7 @@ class HelpScreen extends StatelessWidget {
             children: [
               _buildHelpItem('保存といいね機能', '記事詳細や一覧画面のアイコンをタップすると、後で読みたい記事を保存したり「いいね」をつけたりできます。マイページからいつでも見返すことが可能です。', textColor, subtitleColor, Icons.bookmark),
               const Divider(),
-              _buildHelpItem('カテゴリの並べ替え', 'ホーム画面上部のカテゴリ（すべて、仮想通貨など）は、長押し（ロングタップ）したまま左右に動かすことで、お好みの順番に並べ替えることができます。', textColor, subtitleColor, Icons.swipe),
+              _buildHelpItem('カテゴリの並べ替え', 'ホーム画面右上の「並べ替え」アイコン（≡）をタップすると、カテゴリの順番を変更できる画面が表示されます。各項目の右側のハンドル（≡）をドラッグして、お好みの順番に並べ替えてください。「完了」をタップすると順番が保存されます。', textColor, subtitleColor, Icons.tune),
               const Divider(),
               _buildHelpItem('表示設定の変更', 'マイページ上部のアイコンから、画面の「ダークモード切替」や「文字サイズ変更（標準・大・特大）」が行えます。読みやすい環境に調整してください。', textColor, subtitleColor, Icons.text_fields),
               const Divider(),
