@@ -10,19 +10,20 @@ import '../providers/app_state.dart';
 import 'premium_paywall_screen.dart';
 import 'package:intl/intl.dart';
 
-/// 表を横スクロール可能にする拡張
+/// 表をコンテンツ幅に合わせ、横スクロール可能にする拡張
 class _ScrollableTableExtension extends TableHtmlExtension {
   @override
   InlineSpan build(ExtensionContext context) {
     final span = super.build(context);
     if (span is WidgetSpan) {
       return WidgetSpan(
-        alignment: span.alignment,
-        baseline: span.baseline,
-        style: span.style,
+        alignment: PlaceholderAlignment.top,
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          child: span.child,
+          padding: EdgeInsets.zero,
+          child: IntrinsicWidth(
+            child: span.child,
+          ),
         ),
       );
     }
@@ -241,7 +242,8 @@ class ArticleDetailScreen extends StatelessWidget {
               ),
               'table': Style(
                 border: Border.all(color: dividerColor, width: 1),
-                margin: Margins.only(bottom: 20),
+                margin: Margins.only(bottom: 20, left: 0, right: 0),
+                padding: HtmlPaddings.zero,
               ),
               'thead': Style(
                 backgroundColor: isDark ? const Color(0xFF1E2530) : const Color(0xFFEAEDF0),

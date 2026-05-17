@@ -59,7 +59,7 @@ class PremiumPaywallScreen extends StatelessWidget {
             const SizedBox(height: 24),
             _buildFeatureRow('すべての限定記事・レポートが読み放題', 'プロの分析によるウィークリーレポートや、プレミアム限定の深掘り記事がすべて閲覧可能に。', textColor, subtitleColor),
             const SizedBox(height: 24),
-            _buildFeatureRow('お好み通知の自由なカスタマイズ', '欲しいニュースのカテゴリや通知の頻度（リアルタイム・1日1回）を自由に設定できます。', textColor, subtitleColor),
+            _buildFeatureRow('お好み通知の自由なカスタマイズ', '欲しいニュースのカテゴリや通知の頻度（リアルタイム・時間指定）を自由に設定できます。', textColor, subtitleColor),
             const SizedBox(height: 24),
             _buildFeatureRow('広告の完全非表示', '一切の広告を排除し、最高に快適な情報収集体験を提供します。', textColor, subtitleColor),
 

@@ -221,43 +221,46 @@ class AppState extends ChangeNotifier {
   
   Future<void> _syncFcmTopics() async {
     final messaging = FirebaseMessaging.instance;
-    
-    // まず古い可能性のあるものをすべて解除する前提の運用か、
-    // ここではシンプルに現在の設定に基づいて登録・解除を行う
-    if (!_notificationsEnabled) {
-      await messaging.unsubscribeFromTopic('all_articles_realtime');
-      await messaging.unsubscribeFromTopic('all_articles_scheduled');
-      for (final id in _subscribedCategoryIds) {
-        await messaging.unsubscribeFromTopic('category_${id}_realtime');
-        await messaging.unsubscribeFromTopic('category_${id}_scheduled');
-      }
-      return;
-    }
+    final prefs = await SharedPreferences.getInstance();
 
-    final isScheduled = _notificationFrequency == 'scheduled';
+    // 以前購読していたトピックを取得
+    final prevTopics =
+        (prefs.getStringList('fcm_subscribed_topics') ?? []).toSet();
 
-    if (_subscribedCategoryIds.isEmpty) {
-      if (isScheduled) {
-        await messaging.subscribeToTopic('all_articles_scheduled');
-        await messaging.unsubscribeFromTopic('all_articles_realtime');
+    // 今回購読すべきトピックを計算
+    final newTopics = <String>{};
+    if (_notificationsEnabled) {
+      final isScheduled = _notificationFrequency == 'scheduled';
+      if (_subscribedCategoryIds.isEmpty) {
+        // カテゴリ未指定 → 全体トピック
+        newTopics.add(
+            isScheduled ? 'all_articles_scheduled' : 'all_articles_realtime');
       } else {
-        await messaging.subscribeToTopic('all_articles_realtime');
-        await messaging.unsubscribeFromTopic('all_articles_scheduled');
-      }
-    } else {
-      await messaging.unsubscribeFromTopic('all_articles_realtime');
-      await messaging.unsubscribeFromTopic('all_articles_scheduled');
-
-      for (final id in _subscribedCategoryIds) {
-        if (isScheduled) {
-          await messaging.subscribeToTopic('category_${id}_scheduled');
-          await messaging.unsubscribeFromTopic('category_${id}_realtime');
-        } else {
-          await messaging.subscribeToTopic('category_${id}_realtime');
-          await messaging.unsubscribeFromTopic('category_${id}_scheduled');
+        // カテゴリ指定あり → 各カテゴリのトピック
+        for (final id in _subscribedCategoryIds) {
+          newTopics.add(isScheduled
+              ? 'category_${id}_scheduled'
+              : 'category_${id}_realtime');
         }
       }
     }
+    // 通知OFFの場合は newTopics が空のまま → 全解除
+
+    // 不要になったトピックを解除
+    for (final topic in prevTopics.difference(newTopics)) {
+      await messaging.unsubscribeFromTopic(topic);
+      debugPrint('FCM unsubscribed: $topic');
+    }
+
+    // 新たに必要なトピックを購読
+    for (final topic in newTopics.difference(prevTopics)) {
+      await messaging.subscribeToTopic(topic);
+      debugPrint('FCM subscribed: $topic');
+    }
+
+    // 購読済みトピックを保存
+    await prefs.setStringList(
+        'fcm_subscribed_topics', newTopics.toList());
   }
 
   Future<void> toggleSave(Article article) async {

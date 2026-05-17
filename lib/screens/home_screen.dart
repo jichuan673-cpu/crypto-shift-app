@@ -107,6 +107,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       builder: (_) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
+            final bottomPadding = MediaQuery.of(context).padding.bottom;
             return Container(
               height: MediaQuery.of(context).size.height * 0.65,
               decoration: BoxDecoration(
@@ -174,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   Expanded(
                     child: ReorderableListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: EdgeInsets.fromLTRB(12, 4, 12, bottomPadding + 16),
                       itemCount: editableCategories.length,
                       onReorder: (oldIndex, newIndex) {
                         setSheetState(() {
@@ -236,21 +237,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       const Tab(text: 'すべて'),
       ..._categories.map((c) {
         final name = c['name'] as String;
-        return Tab(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(name),
-              if (c['id'] == 51 && !context.watch<AppState>().isPremium) ...[
-                const SizedBox(width: 4),
-                Icon(Icons.lock, size: 14,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white
-                        : Colors.black),
-              ],
-            ],
-          ),
-        );
+        return Tab(text: name);
       }),
     ];
 

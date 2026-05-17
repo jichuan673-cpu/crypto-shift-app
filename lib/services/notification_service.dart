@@ -19,6 +19,27 @@ class NotificationService {
     const initSettings = InitializationSettings(android: androidSettings);
 
     await _plugin.initialize(initSettings);
+
+    // Androidの通知チャンネルを明示的に作成（システム設定に表示させるため）
+    final androidImpl = _plugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    await androidImpl?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        _realtimeChannelId,
+        'リアルタイム通知',
+        description: '新着記事のリアルタイム通知',
+        importance: Importance.high,
+      ),
+    );
+    await androidImpl?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        _scheduledChannelId,
+        '時間指定通知',
+        description: '指定した時間に届く新着記事まとめ通知',
+        importance: Importance.high,
+      ),
+    );
   }
 
   /// FCMフォアグラウンドメッセージを受信したときにローカル通知として表示する
