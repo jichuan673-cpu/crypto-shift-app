@@ -10,26 +10,6 @@ import '../providers/app_state.dart';
 import 'premium_paywall_screen.dart';
 import 'package:intl/intl.dart';
 
-/// 表をコンテンツ幅に合わせ、横スクロール可能にする拡張
-class _ScrollableTableExtension extends TableHtmlExtension {
-  @override
-  InlineSpan build(ExtensionContext context) {
-    final span = super.build(context);
-    if (span is WidgetSpan) {
-      return WidgetSpan(
-        alignment: PlaceholderAlignment.top,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: EdgeInsets.zero,
-          child: IntrinsicWidth(
-            child: span.child,
-          ),
-        ),
-      );
-    }
-    return span;
-  }
-}
 
 class ArticleDetailScreen extends StatelessWidget {
   final Article article;
@@ -161,123 +141,195 @@ class ArticleDetailScreen extends StatelessWidget {
     final dividerColor = isDark ? Colors.white24 : Colors.black12;
     final codeBgColor = isDark ? const Color(0xFF161B22) : const Color(0xFFF0F2F5);
 
-    // Check for premium restriction (Category ID 51 or 52)
-    final bool isRestricted = (article.categories.contains(51) || article.categories.contains(52)) && !isPremium;
+    final bool isRestricted =
+        (article.categories.contains(51) || article.categories.contains(52)) &&
+            !isPremium;
     final displayContent = isRestricted ? article.excerpt : article.content;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-      child: Column(
-        children: [
-          Html(
-            data: displayContent,
-            style: {
-              'body': Style(
-                color: textColor,
-                fontSize: FontSize(16 * scale),
-                lineHeight: const LineHeight(1.8),
-                fontFamily: 'Noto Serif JP, serif',
-              ),
-              '.summary': Style(color: textColor),
-              '.lead': Style(color: textColor),
-              'span': Style(color: textColor),
-              'h1': Style(
-                color: headingColor,
-                fontWeight: FontWeight.bold,
-                fontSize: FontSize(22 * scale),
-                margin: Margins.only(top: 28, bottom: 12),
-                border: Border(bottom: BorderSide(color: dividerColor, width: 1)),
-                padding: HtmlPaddings.only(bottom: 8),
-              ),
-              'h2': Style(
-                color: headingColor,
-                fontWeight: FontWeight.bold,
-                fontSize: FontSize(20 * scale),
-                margin: Margins.only(top: 24, bottom: 10),
-                padding: HtmlPaddings.only(bottom: 8),
-                border: const Border(left: BorderSide(color: const Color(0xFF555555), width: 4)),
-              ),
-              'h3': Style(
-                color: headingColor,
-                fontWeight: FontWeight.bold,
-                fontSize: FontSize(18 * scale),
-                margin: Margins.only(top: 20, bottom: 8),
-              ),
-              'p': Style(
-                margin: Margins.only(bottom: 20),
-                color: isDark ? const Color(0xFFCDD5E0) : Colors.black87,
-              ),
-              'a': Style(
-                color: const Color(0xFF555555),
-                textDecoration: TextDecoration.none,
-              ),
-              'strong': Style(
-                color: headingColor,
-                fontWeight: FontWeight.bold,
-              ),
-              'img': Style(
-                margin: Margins.symmetric(vertical: 16, horizontal: 0),
-                padding: HtmlPaddings.zero,
-                alignment: Alignment.center,
-              ),
-              'blockquote': Style(
-                color: isDark ? Colors.white70 : Colors.black54,
-                backgroundColor: codeBgColor,
-                padding: HtmlPaddings.all(16),
-                margin: Margins.only(bottom: 20),
-                border: const Border(left: BorderSide(color: Color(0xFF7B2FBE), width: 4)),
-              ),
-              'code': Style(
-                backgroundColor: codeBgColor,
-                color: textColor,
-                fontFamily: 'Noto Serif JP, serif',
-              ),
-              'pre': Style(
-                backgroundColor: codeBgColor,
-                color: textColor,
-                padding: HtmlPaddings.all(16),
-                margin: Margins.only(bottom: 20),
-                border: Border.all(color: dividerColor),
-                fontFamily: 'Noto Serif JP, serif',
-              ),
-              'table': Style(
-                border: Border.all(color: dividerColor, width: 1),
-                margin: Margins.only(bottom: 20, left: 0, right: 0),
-                padding: HtmlPaddings.zero,
-              ),
-              'thead': Style(
-                backgroundColor: isDark ? const Color(0xFF1E2530) : const Color(0xFFEAEDF0),
-              ),
-              'th': Style(
-                color: headingColor,
-                fontWeight: FontWeight.bold,
-                fontSize: FontSize(14 * scale),
-                padding: HtmlPaddings.symmetric(horizontal: 12, vertical: 10),
-                border: Border.all(color: dividerColor, width: 1),
-                backgroundColor: isDark ? const Color(0xFF1E2530) : const Color(0xFFEAEDF0),
-              ),
-              'td': Style(
-                color: textColor,
-                fontSize: FontSize(14 * scale),
-                padding: HtmlPaddings.symmetric(horizontal: 12, vertical: 10),
-                border: Border.all(color: dividerColor, width: 1),
-              ),
-              'tr': Style(
-                border: Border(bottom: BorderSide(color: dividerColor, width: 1)),
-              ),
-            },
-            extensions: [
-              _ScrollableTableExtension(),
-            ],
-            onLinkTap: (url, _, __) async {
-              if (url != null) {
-                final uri = Uri.parse(url);
-                if (await canLaunchUrl(uri)) {
-                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                }
-              }
-            },
+    // 共通スタイルマップ
+    final styles = <String, Style>{
+      'body': Style(
+        color: textColor,
+        fontSize: FontSize(16 * scale),
+        lineHeight: const LineHeight(1.8),
+        fontFamily: 'Noto Serif JP, serif',
+      ),
+      '.summary': Style(color: textColor),
+      '.lead': Style(color: textColor),
+      'span': Style(color: textColor),
+      'h1': Style(
+        color: headingColor,
+        fontWeight: FontWeight.bold,
+        fontSize: FontSize(22 * scale),
+        margin: Margins.only(top: 28, bottom: 12),
+        border: Border(bottom: BorderSide(color: dividerColor, width: 1)),
+        padding: HtmlPaddings.only(bottom: 8),
+      ),
+      'h2': Style(
+        color: headingColor,
+        fontWeight: FontWeight.bold,
+        fontSize: FontSize(20 * scale),
+        margin: Margins.only(top: 24, bottom: 10),
+        padding: HtmlPaddings.only(bottom: 8),
+        border: const Border(
+            left: BorderSide(color: Color(0xFF555555), width: 4)),
+      ),
+      'h3': Style(
+        color: headingColor,
+        fontWeight: FontWeight.bold,
+        fontSize: FontSize(18 * scale),
+        margin: Margins.only(top: 20, bottom: 8),
+      ),
+      'p': Style(
+        margin: Margins.only(bottom: 20),
+        color: isDark ? const Color(0xFFCDD5E0) : Colors.black87,
+      ),
+      'a': Style(
+        color: const Color(0xFF555555),
+        textDecoration: TextDecoration.none,
+      ),
+      'strong': Style(color: headingColor, fontWeight: FontWeight.bold),
+      'img': Style(
+        margin: Margins.symmetric(vertical: 16, horizontal: 0),
+        padding: HtmlPaddings.zero,
+        alignment: Alignment.center,
+      ),
+      'blockquote': Style(
+        color: isDark ? Colors.white70 : Colors.black54,
+        backgroundColor: codeBgColor,
+        padding: HtmlPaddings.all(16),
+        margin: Margins.only(bottom: 20),
+        border:
+            const Border(left: BorderSide(color: Color(0xFF7B2FBE), width: 4)),
+      ),
+      'code': Style(
+        backgroundColor: codeBgColor,
+        color: textColor,
+        fontFamily: 'Noto Serif JP, serif',
+      ),
+      'pre': Style(
+        backgroundColor: codeBgColor,
+        color: textColor,
+        padding: HtmlPaddings.all(16),
+        margin: Margins.only(bottom: 20),
+        border: Border.all(color: dividerColor),
+        fontFamily: 'Noto Serif JP, serif',
+      ),
+      'table': Style(
+        border: Border.all(color: dividerColor, width: 1),
+        margin: Margins.zero,
+        padding: HtmlPaddings.zero,
+      ),
+      'thead': Style(
+        backgroundColor:
+            isDark ? const Color(0xFF1E2530) : const Color(0xFFEAEDF0),
+      ),
+      'th': Style(
+        color: headingColor,
+        fontWeight: FontWeight.bold,
+        fontSize: FontSize(14 * scale),
+        padding: HtmlPaddings.symmetric(horizontal: 12, vertical: 10),
+        border: Border.all(color: dividerColor, width: 1),
+        backgroundColor:
+            isDark ? const Color(0xFF1E2530) : const Color(0xFFEAEDF0),
+      ),
+      'td': Style(
+        color: textColor,
+        fontSize: FontSize(14 * scale),
+        padding: HtmlPaddings.symmetric(horizontal: 12, vertical: 10),
+        border: Border.all(color: dividerColor, width: 1),
+      ),
+      'tr': Style(
+        border: Border(bottom: BorderSide(color: dividerColor, width: 1)),
+      ),
+    };
+
+    onLinkTap(url, _, __) async {
+      if (url != null) {
+        final uri = Uri.parse(url);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      }
+    }
+
+    // <table>タグでHTMLを分割し、テーブル部分だけWidgetレベルで横スクロール処理する
+    // → WidgetSpan内部での制約を回避し、余白ゼロ・完全スクロール可能にする
+    final tableRegex =
+        RegExp(r'<table[\s\S]*?</table>', caseSensitive: false);
+    final parts = <Widget>[];
+    var lastEnd = 0;
+
+    for (final match in tableRegex.allMatches(displayContent)) {
+      // テーブル前の通常HTML
+      if (match.start > lastEnd) {
+        final segment = displayContent.substring(lastEnd, match.start);
+        if (segment.trim().isNotEmpty) {
+          parts.add(Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Html(
+              data: segment,
+              style: styles,
+              onLinkTap: onLinkTap,
+              extensions: const [],
+            ),
+          ));
+        }
+      }
+
+      // テーブル：横スクロール可能なWidgetとして配置（余白なし・フル幅）
+      parts.add(Padding(
+        padding: const EdgeInsets.only(bottom: 20),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Html(
+            data: match.group(0)!,
+            style: styles,
+            extensions: [TableHtmlExtension()],
+            onLinkTap: onLinkTap,
           ),
+        ),
+      ));
+
+      lastEnd = match.end;
+    }
+
+    // テーブル後の残りHTML
+    if (lastEnd < displayContent.length) {
+      final remaining = displayContent.substring(lastEnd);
+      if (remaining.trim().isNotEmpty) {
+        parts.add(Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Html(
+            data: remaining,
+            style: styles,
+            onLinkTap: onLinkTap,
+            extensions: const [],
+          ),
+        ));
+      }
+    }
+
+    // テーブルが1つもない場合は通常通り
+    if (parts.isEmpty) {
+      parts.add(Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Html(
+          data: displayContent,
+          style: styles,
+          onLinkTap: onLinkTap,
+          extensions: const [],
+        ),
+      ));
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ...parts,
           if (isRestricted) _buildPremiumWall(context, isDark),
         ],
       ),

@@ -53,7 +53,8 @@ class NotificationService {
       channelDescription: '新着記事のリアルタイム通知',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
+      icon: '@drawable/ic_notification',
+      color: const Color(0xFF1565C0),
     );
     await _plugin.show(
       0,
@@ -83,7 +84,8 @@ class NotificationService {
       channelDescription: '指定した時間に届く新着記事まとめ通知',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
+      icon: '@drawable/ic_notification',
+      color: const Color(0xFF1565C0),
     );
 
     await _plugin.zonedSchedule(
