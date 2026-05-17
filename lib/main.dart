@@ -6,15 +6,51 @@ import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/app_state.dart';
 import 'screens/root_screen.dart';
 import 'services/revenuecat_service.dart';
 import 'services/notification_service.dart';
 
+/// バックグラウンドFCMメッセージハンドラ
+/// ※ notification ペイロードがある場合はOSが自動表示するため介入不可
+/// ※ data-only メッセージの場合はここでフィルタして表示制御する
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  // バックグラウンドではFCMが自動で通知を表示するため追加処理不要
+
+  // notification ペイロード付き → OS が自動表示（介入不可）
+  // data-only メッセージのみ以下の処理を行う
+  if (message.notification != null) return;
+
+  final prefs = await SharedPreferences.getInstance();
+
+  // 通知オフなら表示しない
+  if (!(prefs.getBool('notificationsEnabled') ?? true)) return;
+
+  // スケジュール設定の場合はリアルタイムFCMを表示しない
+  final frequency = prefs.getString('notificationFrequency') ?? 'realtime';
+  if (frequency == 'scheduled') return;
+
+  // カテゴリフィルタ
+  final subscribedCategories =
+      prefs.getStringList('subscribedCategoryIds') ?? [];
+  if (subscribedCategories.isNotEmpty) {
+    final catStr =
+        message.data['categories'] ?? message.data['category'] ?? '';
+    if (catStr.isNotEmpty) {
+      final msgCats = catStr.split(',').map((s) => s.trim()).toList();
+      final hasMatch = subscribedCategories.any((id) => msgCats.contains(id));
+      if (!hasMatch) return;
+    }
+  }
+
+  // ローカル通知として表示
+  await NotificationService.initialize();
+  await NotificationService.showForegroundNotification(
+    title: message.data['title'] ?? '新着記事',
+    body: message.data['body'] ?? 'Crypto Shiftに新しい記事が届きました',
+  );
 }
 
 void main() async {
@@ -129,12 +165,42 @@ class _FcmListenerWidgetState extends State<FcmListenerWidget> {
   @override
   void initState() {
     super.initState();
+
+    // フォアグラウンド受信時：ユーザー設定に基づいてフィルタして表示
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final appState = context.read<AppState>();
+
+      // 通知オフなら表示しない
       if (!appState.notificationsEnabled) return;
-      final title = message.notification?.title ?? '新着記事';
-      final body = message.notification?.body ?? 'Crypto Shiftに新しい記事が届きました';
-      NotificationService.showForegroundNotification(title: title, body: body);
+
+      // スケジュール設定の場合はリアルタイムFCMを表示しない
+      // （代わりに指定時刻にローカル通知が届く）
+      if (appState.notificationFrequency == 'scheduled') return;
+
+      // カテゴリフィルタ（メッセージのdataにcategoriesが含まれる場合）
+      final subscribedIds = appState.subscribedCategoryIds;
+      if (subscribedIds.isNotEmpty) {
+        final catStr =
+            message.data['categories'] ?? message.data['category'] ?? '';
+        if (catStr.isNotEmpty) {
+          final msgCats = catStr
+              .split(',')
+              .map((s) => int.tryParse(s.trim()))
+              .whereType<int>()
+              .toList();
+          final hasMatch = msgCats.any((cat) => subscribedIds.contains(cat));
+          if (!hasMatch) return;
+        }
+      }
+
+      final title = message.notification?.title ??
+          message.data['title'] ??
+          '新着記事';
+      final body = message.notification?.body ??
+          message.data['body'] ??
+          'Crypto Shiftに新しい記事が届きました';
+      NotificationService.showForegroundNotification(
+          title: title, body: body);
     });
   }
 
