@@ -28,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool _isSearching = false;
   String _searchQuery = '';
   TabController? _tabController;
+  Timer? _debounceTimer;
 
   late final MarketDataApi _marketDataApi;
 
@@ -89,10 +90,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _tabController?.dispose();
     _searchController.dispose();
     _marketDataApi.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String val) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      if (mounted) setState(() => _searchQuery = val);
+    });
   }
 
   void _showCategoryReorderSheet(BuildContext context) {
@@ -280,12 +289,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   controller: _searchController,
                   style: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
                   autofocus: true,
+                  textInputAction: TextInputAction.search,
                   decoration: InputDecoration(
                     hintText: '記事を検索...',
                     hintStyle: TextStyle(color: isDark ? Colors.white38 : Colors.black38),
                     border: InputBorder.none,
                   ),
+                  onChanged: _onSearchChanged,
                   onSubmitted: (val) {
+                    _debounceTimer?.cancel();
                     setState(() => _searchQuery = val);
                   },
                 )
@@ -317,6 +329,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ? IconButton(
                   icon: Icon(Icons.arrow_back, color: Theme.of(context).appBarTheme.foregroundColor),
                   onPressed: () {
+                    _debounceTimer?.cancel();
                     setState(() {
                       _isSearching = false;
                       _searchQuery = '';
@@ -547,14 +560,27 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
     });
 
     try {
-      // 全ユーザーがprivate記事を含む一覧を取得（コンテンツ制限はアプリ詳細画面で制御）
-      final posts = await WordPressApi.getPremiumPosts(
-        page: _currentPage,
-        perPage: 10,
-        categoryId: widget.categoryIds == null ? widget.categoryId : null,
-        categoryIds: widget.categoryIds,
-        searchQuery: widget.searchQuery != null && widget.searchQuery!.isNotEmpty ? widget.searchQuery : null,
-      );
+      final query = widget.searchQuery != null && widget.searchQuery!.isNotEmpty
+          ? widget.searchQuery
+          : null;
+      // 検索時は標準WordPress APIを使用（検索対応済み）
+      // 通常閲覧時はprivate記事も含む独自エンドポイントを使用
+      final posts = query != null
+          ? await WordPressApi.getPosts(
+              page: _currentPage,
+              perPage: 10,
+              categoryId:
+                  widget.categoryIds == null ? widget.categoryId : null,
+              categoryIds: widget.categoryIds,
+              searchQuery: query,
+            )
+          : await WordPressApi.getPremiumPosts(
+              page: _currentPage,
+              perPage: 10,
+              categoryId:
+                  widget.categoryIds == null ? widget.categoryId : null,
+              categoryIds: widget.categoryIds,
+            );
       if (mounted) {
         setState(() {
           _articles = refresh ? posts : [..._articles, ...posts];
@@ -577,14 +603,25 @@ class _ArticleListState extends State<_ArticleList> with AutomaticKeepAliveClien
     setState(() => _isLoadingMore = true);
     _currentPage++;
     try {
-      // 全ユーザーがprivate記事を含む一覧を取得（コンテンツ制限はアプリ詳細画面で制御）
-      final posts = await WordPressApi.getPremiumPosts(
-        page: _currentPage,
-        perPage: 10,
-        categoryId: widget.categoryIds == null ? widget.categoryId : null,
-        categoryIds: widget.categoryIds,
-        searchQuery: widget.searchQuery != null && widget.searchQuery!.isNotEmpty ? widget.searchQuery : null,
-      );
+      final query = widget.searchQuery != null && widget.searchQuery!.isNotEmpty
+          ? widget.searchQuery
+          : null;
+      final posts = query != null
+          ? await WordPressApi.getPosts(
+              page: _currentPage,
+              perPage: 10,
+              categoryId:
+                  widget.categoryIds == null ? widget.categoryId : null,
+              categoryIds: widget.categoryIds,
+              searchQuery: query,
+            )
+          : await WordPressApi.getPremiumPosts(
+              page: _currentPage,
+              perPage: 10,
+              categoryId:
+                  widget.categoryIds == null ? widget.categoryId : null,
+              categoryIds: widget.categoryIds,
+            );
       if (mounted) {
         setState(() {
           _articles = [..._articles, ...posts];
