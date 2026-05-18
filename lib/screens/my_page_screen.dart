@@ -10,6 +10,8 @@ import 'help_screen.dart';
 import 'notification_settings_screen.dart';
 import 'premium_paywall_screen.dart';
 import 'plan_details_screen.dart';
+import 'privacy_policy_screen.dart';
+import 'terms_screen.dart';
 
 class MyPageScreen extends StatelessWidget {
   const MyPageScreen({super.key});
@@ -69,15 +71,15 @@ class MyPageScreen extends StatelessWidget {
                     MaterialPageRoute(builder: (context) => const AboutScreen()),
                   );
                 } else if (value == 'privacy') {
-                  final url = Uri.parse('https://crypto-shift.com/privacy-policy/');
-                  if (await canLaunchUrl(url)) {
-                    await launchUrl(url, mode: LaunchMode.externalApplication);
-                  }
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
+                  );
                 } else if (value == 'terms') {
-                  final url = Uri.parse('https://crypto-shift.com/%e5%88%a9%e7%94%a8%e8%a6%8f%e7%b4%84/');
-                  if (await canLaunchUrl(url)) {
-                    await launchUrl(url, mode: LaunchMode.externalApplication);
-                  }
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const TermsScreen()),
+                  );
                 }
               },
               itemBuilder: (context) => [
