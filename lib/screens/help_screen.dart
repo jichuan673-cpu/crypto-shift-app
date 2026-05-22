@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'contact_screen.dart';
 
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
@@ -61,11 +61,11 @@ class HelpScreen extends StatelessWidget {
                 title: Text('お問い合わせ', style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 15)),
                 subtitle: Text('不具合のご報告やご要望など', style: TextStyle(color: subtitleColor, fontSize: 13)),
                 trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-                onTap: () async {
-                  final url = Uri.parse('https://crypto-shift.com/%E3%81%8A%E5%95%8F%E3%81%84%E5%90%88%E3%82%8F%E3%81%9B');
-                  if (await canLaunchUrl(url)) {
-                    await launchUrl(url, mode: LaunchMode.externalApplication);
-                  }
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ContactScreen()),
+                  );
                 },
               ),
               const Divider(),
