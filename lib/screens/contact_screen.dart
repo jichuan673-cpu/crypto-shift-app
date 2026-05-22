@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ContactScreen extends StatefulWidget {
   const ContactScreen({super.key});
@@ -16,7 +17,8 @@ class _ContactScreenState extends State<ContactScreen> {
   String _selectedCategory = '不具合のご報告';
   bool _isSending = false;
 
-  static const _contactEmail = 'info@crypto-shift.com';
+  static const _contactApiUrl =
+      'https://crypto-shift.com/wp-json/cryptoshift/v1/contact';
 
   final List<String> _categories = [
     '不具合のご報告',
@@ -38,34 +40,35 @@ class _ContactScreenState extends State<ContactScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSending = true);
 
-    final name = _nameController.text.trim();
-    final email = _emailController.text.trim();
-    final category = _selectedCategory;
-    final message = _messageController.text.trim();
-
-    final subject = Uri.encodeComponent(
-        '[Crypto Shift] $category');
-    final body = Uri.encodeComponent(
-        'お名前: $name\nメールアドレス: $email\nお問い合わせ種別: $category\n\n【お問い合わせ内容】\n$message');
-
-    final mailUri = Uri.parse(
-        'mailto:$_contactEmail?subject=$subject&body=$body');
-
     try {
-      if (await canLaunchUrl(mailUri)) {
-        await launchUrl(mailUri);
-        if (mounted) {
-          _showSuccessDialog();
-        }
+      final response = await http
+          .post(
+            Uri.parse(_contactApiUrl),
+            headers: {'Content-Type': 'application/json; charset=UTF-8'},
+            body: jsonEncode({
+              'name': _nameController.text.trim(),
+              'email': _emailController.text.trim(),
+              'category': _selectedCategory,
+              'message': _messageController.text.trim(),
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        _showSuccessDialog();
       } else {
-        if (mounted) {
-          _showErrorDialog('メールアプリを開けませんでした。\n$_contactEmail に直接メールをお送りください。');
-        }
+        String errMsg = 'エラーが発生しました。しばらく経ってから再度お試しください。';
+        try {
+          final body = jsonDecode(response.body);
+          if (body['message'] != null) errMsg = body['message'];
+        } catch (_) {}
+        _showErrorDialog(errMsg);
       }
     } catch (e) {
-      if (mounted) {
-        _showErrorDialog('エラーが発生しました。\n$_contactEmail に直接メールをお送りください。');
-      }
+      if (!mounted) return;
+      _showErrorDialog('送信に失敗しました。\nインターネット接続を確認してから再度お試しください。');
     } finally {
       if (mounted) setState(() => _isSending = false);
     }
@@ -75,9 +78,9 @@ class _ContactScreenState extends State<ContactScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('メールアプリを起動しました'),
+        title: const Text('送信完了'),
         content: const Text(
-            'メールアプリで内容を確認して送信してください。\n\n通常3営業日以内にご返信いたします。'),
+            'お問い合わせを受け付けました。\n通常3営業日以内にご返信いたします。'),
         actions: [
           TextButton(
             onPressed: () {
@@ -100,7 +103,8 @@ class _ContactScreenState extends State<ContactScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('閉じる', style: TextStyle(color: Color(0xFF555555))),
+            child:
+                const Text('閉じる', style: TextStyle(color: Color(0xFF555555))),
           ),
         ],
       ),
@@ -112,9 +116,11 @@ class _ContactScreenState extends State<ContactScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
     final subtitleColor = isDark ? Colors.white70 : Colors.black54;
-    final bgColor = isDark ? const Color(0xFF0D1117) : const Color(0xFFF0F2F5);
+    final bgColor =
+        isDark ? const Color(0xFF0D1117) : const Color(0xFFF0F2F5);
     final cardColor = isDark ? const Color(0xFF161B22) : Colors.white;
-    final fillColor = isDark ? const Color(0xFF1C212B) : const Color(0xFFF8F9FA);
+    final fillColor =
+        isDark ? const Color(0xFF1C212B) : const Color(0xFFF8F9FA);
     final borderColor = isDark ? Colors.white12 : Colors.black12;
 
     return Scaffold(
@@ -146,12 +152,12 @@ class _ContactScreenState extends State<ContactScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline,
-                      color: const Color(0xFF555555), size: 20),
+                  const Icon(Icons.info_outline,
+                      color: Color(0xFF555555), size: 20),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'お問い合わせ内容を入力後、メールアプリで送信してください。通常3営業日以内にご返信します。',
+                      '内容を入力して送信ボタンを押してください。通常3営業日以内にご返信します。',
                       style: TextStyle(
                           color: subtitleColor, fontSize: 13, height: 1.5),
                     ),
@@ -217,7 +223,8 @@ class _ContactScreenState extends State<ContactScreen> {
                       .map((c) => DropdownMenuItem(
                           value: c,
                           child: Text(c,
-                              style: TextStyle(color: textColor, fontSize: 15))))
+                              style:
+                                  TextStyle(color: textColor, fontSize: 15))))
                       .toList(),
                 ),
               ),
@@ -231,6 +238,7 @@ class _ContactScreenState extends State<ContactScreen> {
               controller: _messageController,
               style: TextStyle(color: textColor),
               maxLines: 7,
+              onChanged: (_) => setState(() {}),
               decoration: _inputDecoration(
                   'お問い合わせの内容を具体的にご記入ください',
                   fillColor,
@@ -263,7 +271,7 @@ class _ContactScreenState extends State<ContactScreen> {
                             strokeWidth: 2, color: Colors.white))
                     : const Icon(Icons.send, size: 18),
                 label: Text(
-                  _isSending ? '準備中...' : 'メールアプリで送信する',
+                  _isSending ? '送信中...' : '送信する',
                   style: const TextStyle(
                       fontSize: 16, fontWeight: FontWeight.bold),
                 ),
@@ -277,16 +285,6 @@ class _ContactScreenState extends State<ContactScreen> {
                   disabledBackgroundColor:
                       const Color(0xFF555555).withOpacity(0.5),
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // 直接メール案内
-            Center(
-              child: Text(
-                '直接メールでのお問い合わせ: $_contactEmail',
-                style: TextStyle(color: subtitleColor, fontSize: 12),
-                textAlign: TextAlign.center,
               ),
             ),
             const SizedBox(height: 48),
