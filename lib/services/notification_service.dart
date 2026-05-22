@@ -13,9 +13,13 @@ class NotificationService {
 
   static Future<void> initialize() async {
     tz.initializeTimeZones();
+    // 日本時間（Asia/Tokyo = UTC+9）に明示的に設定
+    // これをしないとtz.localがUTCになり、時間指定通知が9時間ずれる
+    final tokyo = tz.getLocation('Asia/Tokyo');
+    tz.setLocalLocation(tokyo);
 
     const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@drawable/ic_notification');
     const initSettings = InitializationSettings(android: androidSettings);
 
     await _plugin.initialize(initSettings);
